@@ -171,6 +171,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <div class="nav-item" data-page="calendar" onclick="nav(this)"><span class="nav-icon">▦</span>Kalendarz</div>
   </div>
   <div class="nav-group">
+    <div class="nav-group-label">Kanały & Metryki</div>
+    <div class="nav-item" data-page="channels" onclick="nav(this)"><span class="nav-icon">📡</span>Moje Kanały<span class="nav-badge">NEW</span></div>
     <div class="nav-group-label">Brand</div>
     <div class="nav-item" data-page="knowledge" onclick="nav(this)"><span class="nav-icon">◆</span>Baza Wiedzy</div>
     <div class="nav-item" data-page="profile" onclick="nav(this)"><span class="nav-icon">◎</span>Audyt Profilu</div>
@@ -442,8 +444,111 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
   </div>
 </div>
 
+
+<!-- CHANNELS & METRICS -->
+<div class="page" id="page-channels">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Moje Kanały</div><div class="ph-sub">ŚLEDZENIE METRYK · WYŚWIETLENIA · ZAANGAŻOWANIE · WZROST</div></div>
+    <button class="btn btn-sm" onclick="openAddChannel()">+ DODAJ KANAŁ</button>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="g4 mb20" id="ch-stats-row">
+    <div class="stat"><div class="stat-val" id="ch-total-subs">—</div><div class="stat-lbl">ŁĄCZNI SUBSKRYBENCI</div><div class="stat-ch">wszystkie platformy</div></div>
+    <div class="stat red"><div class="stat-val" id="ch-total-views">—</div><div class="stat-lbl">ŁĄCZNE WYŚWIETLENIA</div><div class="stat-ch">wszystkie kanały</div></div>
+    <div class="stat gold"><div class="stat-val" id="ch-avg-eng">—</div><div class="stat-lbl">ŚR. ZAANGAŻOWANIE</div><div class="stat-ch">% engagement rate</div></div>
+    <div class="stat cyan"><div class="stat-val" id="ch-channels-count">—</div><div class="stat-lbl">ŚLEDZONYCH KANAŁÓW</div><div class="stat-ch">aktywne</div></div>
+  </div>
+
+  <!-- Channels List -->
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">📡 TWOJE KANAŁY</div>
+      <div id="ch-list"><div class="empty-state"><div class="empty-icon">📡</div>Brak kanałów. Kliknij "Dodaj kanał" aby zacząć śledzić metryki.</div></div>
+    </div>
+
+    <!-- Add Post Metrics -->
+    <div class="card">
+      <div class="card-title">📊 DODAJ METRYKI POSTA</div>
+      <div class="field"><label class="label">KANAŁ</label><select class="select" id="pm-channel"></select></div>
+      <div class="field"><label class="label">URL POSTA / SHORTA</label><input class="input" id="pm-url" placeholder="https://youtube.com/shorts/..."/></div>
+      <div class="field"><label class="label">TYTUŁ</label><input class="input" id="pm-title" placeholder="Tytuł wideo..."/></div>
+      <div class="field"><label class="label">PLATFORMA</label>
+        <select class="select" id="pm-platform">
+          <option>YouTube Shorts</option><option>YouTube</option><option>Instagram Reels</option><option>TikTok</option><option>X</option>
+        </select>
+      </div>
+      <div class="ir3 mb12">
+        <div><label class="label">WYŚWIETLENIA</label><input class="input" id="pm-views" placeholder="np. 48000" type="number"/></div>
+        <div><label class="label">LAJKI</label><input class="input" id="pm-likes" placeholder="np. 2100" type="number"/></div>
+        <div><label class="label">KOMENTARZE</label><input class="input" id="pm-comments" placeholder="np. 89" type="number"/></div>
+      </div>
+      <div class="ir mb12">
+        <div><label class="label">UDOSTĘPNIENIA</label><input class="input" id="pm-shares" placeholder="np. 340" type="number"/></div>
+        <div><label class="label">ZAPISANIA</label><input class="input" id="pm-saves" placeholder="np. 120" type="number"/></div>
+      </div>
+      <div class="field"><label class="label">DATA PUBLIKACJI</label><input class="input" id="pm-date" type="date"/></div>
+      <button class="btn" onclick="savePostMetrics()" id="pm-btn">ZAPISZ METRYKI</button>
+    </div>
+  </div>
+
+  <!-- Top Posts -->
+  <div class="card">
+    <div class="card-title">🏆 TOP POSTY / SHORTY <span class="badge badge-outline" id="pm-count">0 wpisów</span></div>
+    <div id="pm-list"><div class="empty-state"><div class="empty-icon">📈</div>Brak danych. Dodaj metryki swoich postów aby śledzić wyniki.</div></div>
+  </div>
+</div>
+
+<!-- ADD CHANNEL OVERLAY -->
+<div class="overlay" id="add-channel-overlay" style="display:none">
+  <div class="ov-card" style="max-width:480px">
+    <div class="ov-title">DODAJ KANAŁ</div>
+    <div class="ov-sub">Wklej link do swojego kanału. Metryki będziesz aktualizować ręcznie lub przez API platformy.</div>
+    <div class="field"><label class="label">PLATFORMA</label>
+      <select class="select" id="nc-platform">
+        <option>YouTube</option><option>Instagram</option><option>TikTok</option><option>X (Twitter)</option>
+      </select>
+    </div>
+    <div class="field"><label class="label">URL KANAŁU / PROFILU</label><input class="input" id="nc-url" placeholder="https://youtube.com/@twoj-kanal"/></div>
+    <div class="field"><label class="label">NAZWA KANAŁU</label><input class="input" id="nc-name" placeholder="np. sebastian koba"/></div>
+    <div class="field"><label class="label">AKTUALNA LICZBA SUBSKRYBENTÓW</label><input class="input" id="nc-subs" placeholder="np. 12400" type="number"/></div>
+    <div class="field"><label class="label">ŁĄCZNE WYŚWIETLENIA</label><input class="input" id="nc-views" placeholder="np. 480000" type="number"/></div>
+    <div class="flex">
+      <button class="btn btn-ghost" onclick="closeAddChannel()">ANULUJ</button>
+      <button class="btn" onclick="addChannel()" id="nc-btn">DODAJ KANAŁ</button>
+    </div>
+  </div>
+</div>
+
 </main>
 </div>
+
+<style>
+/* extra styles for channels */
+.ch-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
+.ch-platform-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:var(--s2);border:1px solid var(--border2);}
+.ch-info{flex:1;}
+.ch-name{font-family:var(--fh);font-weight:700;font-size:13px;margin-bottom:4px;}
+.ch-url{font-size:10px;color:var(--muted);margin-bottom:10px;word-break:break-all;}
+.ch-metrics{display:flex;gap:16px;flex-wrap:wrap;}
+.ch-metric{text-align:center;}
+.ch-metric-val{font-family:var(--fh);font-weight:800;font-size:14px;color:var(--lime);}
+.ch-metric-lbl{font-size:8px;letter-spacing:1.5px;color:var(--muted);margin-top:2px;}
+.ch-del{margin-left:auto;background:none;border:none;color:var(--muted2);cursor:pointer;font-size:18px;flex-shrink:0;transition:color .12s;}
+.ch-del:hover{color:var(--red);}
+.pm-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.pm-rank{font-family:var(--fh);font-weight:800;font-size:18px;color:var(--muted2);width:28px;text-align:center;flex-shrink:0;}
+.pm-info{flex:1;}
+.pm-title{font-size:12px;font-family:var(--fh);font-weight:700;margin-bottom:4px;}
+.pm-platform{font-size:9px;color:var(--muted);letter-spacing:1px;}
+.pm-stats{display:flex;gap:14px;margin-top:6px;flex-wrap:wrap;}
+.pm-stat{font-size:10px;color:var(--muted);}
+.pm-stat span{color:var(--text);font-family:var(--fh);font-weight:700;}
+.eng-badge{font-size:9px;padding:2px 8px;border-radius:20px;font-family:var(--fh);font-weight:700;flex-shrink:0;}
+.eng-high{background:rgba(201,245,60,.15);color:var(--lime);border:1px solid rgba(201,245,60,.3);}
+.eng-mid{background:rgba(232,184,75,.1);color:var(--gold);border:1px solid rgba(232,184,75,.3);}
+.eng-low{background:rgba(255,77,46,.1);color:var(--red);border:1px solid rgba(255,77,46,.3);}
+</style>
 
 <!-- SETUP OVERLAY -->
 <div class="overlay" id="setup-overlay">
@@ -501,6 +606,8 @@ window.onload = async () => {
   loadKb();
   loadCompetitors();
   loadDmTemplates();
+  loadChannels();
+  loadPostMetrics();
 };
 
 async function api(path, method='GET', body=null) {
@@ -946,6 +1053,141 @@ function copyAgentLink() {
 function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
 function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),2800);}
 function copyText(text){navigator.clipboard.writeText(text).then(()=>notify('✦ Skopiowano!'));}
+// ── CHANNELS ──
+function openAddChannel() { document.getElementById('add-channel-overlay').style.display='flex'; }
+function closeAddChannel() { document.getElementById('add-channel-overlay').style.display='none'; }
+
+const platformIcon = { 'YouTube':'▶️', 'Instagram':'📸', 'TikTok':'🎵', 'X (Twitter)':'𝕏' };
+const platformColor = { 'YouTube':'var(--red)', 'Instagram':'#c13584', 'TikTok':'var(--cyan)', 'X (Twitter)':'#888' };
+
+async function addChannel() {
+  const platform = v('nc-platform'), channel_url = v('nc-url'), channel_name = v('nc-name');
+  const subs = parseInt(v('nc-subs'))||0, totalViews = parseInt(v('nc-views'))||0;
+  if (!channel_url) { notify('Wklej URL kanału!'); return; }
+  const btn = document.getElementById('nc-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try {
+    const ch = await api('channels','POST',{ platform, channel_url, channel_name, subscribers: subs, total_views: totalViews });
+    // Save initial metrics snapshot
+    if (ch?.id && (subs||totalViews)) {
+      await api('metrics/channels','POST',{ channel_id: ch.id, subscribers: subs, total_views: totalViews }).catch(()=>{});
+    }
+    closeAddChannel();
+    document.getElementById('nc-url').value='';
+    document.getElementById('nc-name').value='';
+    document.getElementById('nc-subs').value='';
+    document.getElementById('nc-views').value='';
+    await loadChannels();
+    notify('✦ Kanał dodany!');
+  } catch(e) { notify('Błąd: '+e.message); }
+  btn.disabled=false; btn.textContent='DODAJ KANAŁ';
+}
+
+async function loadChannels() {
+  try {
+    const channels = await api('channels');
+    const summary = await api('metrics/summary');
+    // Update stats
+    document.getElementById('ch-total-subs').textContent = formatNum(summary.total_subscribers||0);
+    document.getElementById('ch-total-views').textContent = formatNum(summary.total_views||0);
+    document.getElementById('ch-avg-eng').textContent = (summary.avg_engagement_rate||0).toFixed(1)+'%';
+    document.getElementById('ch-channels-count').textContent = summary.total_channels||0;
+    // Populate channel dropdown for metrics
+    const sel = document.getElementById('pm-channel');
+    sel.innerHTML = '<option value="">-- wybierz kanał --</option>' + (channels||[]).map((c:any)=>`<option value="${c.id}">${c.channel_name||c.channel_url} (${c.platform})</option>`).join('');
+    // Render channel list
+    const list = document.getElementById('ch-list');
+    if (!channels?.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">📡</div>Brak kanałów.</div>'; return; }
+    list.innerHTML = channels.map((c:any) => `
+      <div class="ch-card">
+        <div class="ch-platform-icon" style="color:${platformColor[c.platform]||'var(--muted)'}">${platformIcon[c.platform]||'📡'}</div>
+        <div class="ch-info">
+          <div class="ch-name">${c.channel_name||'Kanał'}</div>
+          <div class="ch-url">${c.platform} · <a href="${c.channel_url}" target="_blank" style="color:var(--muted);text-decoration:none">${c.channel_url}</a></div>
+          <div class="ch-metrics">
+            <div class="ch-metric"><div class="ch-metric-val">${formatNum(c.subscribers||0)}</div><div class="ch-metric-lbl">SUBS</div></div>
+            <div class="ch-metric"><div class="ch-metric-val" style="color:var(--red)">${formatNum(c.total_views||0)}</div><div class="ch-metric-lbl">VIEWS</div></div>
+            <div class="ch-metric"><div class="ch-metric-val" style="color:var(--gold)">${c.last_synced_at?new Date(c.last_synced_at).toLocaleDateString('pl-PL'):'—'}</div><div class="ch-metric-lbl">SYNC</div></div>
+          </div>
+          <div class="flex mt8">
+            <button class="btn btn-ghost btn-sm" onclick="openUpdateChannel('${c.id}')">AKTUALIZUJ STATS</button>
+          </div>
+        </div>
+        <button class="ch-del" onclick="deleteChannel('${c.id}')">×</button>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+function openUpdateChannel(channelId: string) {
+  const subs = prompt('Aktualna liczba subskrybentów:');
+  const views = prompt('Łączna liczba wyświetleń:');
+  if (subs===null) return;
+  api('metrics/channels','POST',{ channel_id: channelId, subscribers: parseInt(subs)||0, total_views: parseInt(views||'0')||0 })
+    .then(()=>{ loadChannels(); notify('✦ Statystyki zaktualizowane!'); })
+    .catch(e=>notify('Błąd: '+e.message));
+}
+
+async function deleteChannel(id: string) {
+  if (!confirm('Usunąć kanał?')) return;
+  await api('channels/'+id,'DELETE').catch(()=>{});
+  await loadChannels();
+  notify('Kanał usunięty.');
+}
+
+async function savePostMetrics() {
+  const channel_id = document.getElementById('pm-channel').value;
+  const post_url = v('pm-url'), title = v('pm-title'), platform = v('pm-platform');
+  const views = parseInt(v('pm-views'))||0, likes = parseInt(v('pm-likes'))||0;
+  const comments = parseInt(v('pm-comments'))||0, shares = parseInt(v('pm-shares'))||0, saves = parseInt(v('pm-saves'))||0;
+  const published_at = v('pm-date') || null;
+  if (!post_url) { notify('Wklej URL posta!'); return; }
+  const btn = document.getElementById('pm-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try {
+    await api('metrics/posts','POST',{ channel_id:channel_id||null, post_url, platform, title, views, likes, comments, shares, saves, published_at });
+    document.getElementById('pm-url').value=''; document.getElementById('pm-title').value='';
+    document.getElementById('pm-views').value=''; document.getElementById('pm-likes').value='';
+    document.getElementById('pm-comments').value=''; document.getElementById('pm-shares').value='';
+    document.getElementById('pm-saves').value='';
+    await loadPostMetrics();
+    notify('✦ Metryki zapisane!');
+  } catch(e) { notify('Błąd: '+e.message); }
+  btn.disabled=false; btn.textContent='ZAPISZ METRYKI';
+}
+
+async function loadPostMetrics() {
+  try {
+    const posts = await api('metrics/posts');
+    document.getElementById('pm-count').textContent = (posts?.length||0)+' wpisów';
+    const list = document.getElementById('pm-list');
+    if (!posts?.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">📈</div>Brak danych.</div>'; return; }
+    list.innerHTML = posts.map((p:any, i:number) => {
+      const eng = parseFloat(p.engagement_rate||0);
+      const engClass = eng>=5?'eng-high':eng>=2?'eng-mid':'eng-low';
+      return `<div class="pm-row">
+        <div class="pm-rank">#${i+1}</div>
+        <div class="pm-info">
+          <div class="pm-title">${p.title||p.post_url?.substring(0,60)||'Post'}</div>
+          <div class="pm-platform">${p.platform} · ${p.recorded_at?new Date(p.recorded_at).toLocaleDateString('pl-PL'):''}</div>
+          <div class="pm-stats">
+            <div class="pm-stat">👁 <span>${formatNum(p.views||0)}</span></div>
+            <div class="pm-stat">❤️ <span>${formatNum(p.likes||0)}</span></div>
+            <div class="pm-stat">💬 <span>${formatNum(p.comments||0)}</span></div>
+            <div class="pm-stat">↗️ <span>${formatNum(p.shares||0)}</span></div>
+            <div class="pm-stat">🔖 <span>${formatNum(p.saves||0)}</span></div>
+          </div>
+        </div>
+        <div class="eng-badge ${engClass}">${eng.toFixed(1)}% ENG</div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+function formatNum(n: number): string {
+  if (n>=1000000) return (n/1000000).toFixed(1)+'M';
+  if (n>=1000) return (n/1000).toFixed(1)+'K';
+  return String(n);
+}
 </script>
 </body>
 </html>
