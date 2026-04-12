@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KULT — AI Creator Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080807;--s1:#0f0f0d;--s2:#161614;--s3:#1e1e1b;
+  --border:#252520;--border2:#2e2e28;
+  --lime:#c9f53c;--lime-dim:rgba(201,245,60,.08);
+  --red:#ff4d2e;--gold:#e8b84b;--cyan:#44d9c8;--purple:#a78bfa;
+  --text:#ebebdf;--muted:#5a5a50;--muted2:#3a3a32;
+  --fh:'Syne',sans-serif;--fb:'DM Mono',monospace;--fs:'Instrument Serif',serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden;}
+.shell{display:flex;min-height:100vh;}
+.sidebar{width:220px;background:var(--s1);border-right:1px solid var(--border);position:fixed;height:100vh;display:flex;flex-direction:column;z-index:50;overflow-y:auto;}
+.logo-wrap{padding:24px 20px 20px;border-bottom:1px solid var(--border);}
+.logo-mark{font-family:var(--fh);font-size:20px;font-weight:800;letter-spacing:8px;color:var(--lime);}
+.logo-sub{font-size:8.5px;letter-spacing:3.5px;color:var(--muted);margin-top:3px;}
+.nav-group{padding:16px 10px 0;}
+.nav-group-label{font-size:8px;letter-spacing:3px;color:var(--muted2);padding:0 10px 8px;}
+.nav-item{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:5px;cursor:pointer;font-size:11px;color:var(--muted);letter-spacing:.3px;transition:all .12s;border:1px solid transparent;margin-bottom:2px;}
+.nav-item:hover{background:var(--s2);color:var(--text);}
+.nav-item.active{background:var(--s2);color:var(--lime);border-color:var(--border2);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;font-size:8px;background:var(--lime);color:var(--bg);padding:1px 6px;border-radius:20px;font-family:var(--fh);font-weight:700;}
+.sidebar-footer{margin-top:auto;padding:16px 20px;border-top:1px solid var(--border);}
+.brand-pill{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.brand-pill:hover .brand-name{color:var(--lime);}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:11px;color:var(--bg);flex-shrink:0;}
+.brand-name{font-size:11px;color:var(--text);font-family:var(--fh);font-weight:700;}
+.brand-niche{font-size:9px;color:var(--muted);margin-top:1px;}
+.main{margin-left:220px;flex:1;padding:28px 32px;}
+.page{display:none;animation:fadeUp .2s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:16px;}
+.ph-title{font-family:var(--fh);font-size:26px;font-weight:800;line-height:1;}
+.ph-sub{font-size:9px;letter-spacing:3px;color:var(--muted);margin-top:6px;}
+.ph-right{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.btn{background:var(--lime);color:var(--bg);border:none;padding:9px 18px;font-family:var(--fh);font-weight:700;font-size:10px;letter-spacing:2px;border-radius:4px;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;gap:7px;}
+.btn:hover{background:#d8ff50;transform:translateY(-1px);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--lime);border:1px solid rgba(201,245,60,.3);}
+.btn-ghost:hover{background:var(--lime-dim);border-color:var(--lime);transform:none;}
+.btn-sm{padding:6px 13px;font-size:9px;}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:22px;}
+.card-title{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:2.5px;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.badge{font-size:8px;padding:2px 7px;border-radius:20px;font-family:var(--fh);font-weight:700;letter-spacing:1.5px;}
+.badge-lime{background:var(--lime);color:var(--bg);}
+.badge-outline{border:1px solid var(--border2);color:var(--muted);background:transparent;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
+.stat{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--lime);}
+.stat.red::after{background:var(--red);}
+.stat.gold::after{background:var(--gold);}
+.stat.cyan::after{background:var(--cyan);}
+.stat-val{font-family:var(--fh);font-size:26px;font-weight:800;color:var(--lime);line-height:1;}
+.stat.red .stat-val{color:var(--red);}
+.stat.gold .stat-val{color:var(--gold);}
+.stat.cyan .stat-val{color:var(--cyan);}
+.stat-lbl{font-size:9px;letter-spacing:2.5px;color:var(--muted);margin-top:5px;}
+.stat-ch{font-size:10px;color:#4ade80;margin-top:8px;}
+.field{margin-bottom:14px;}
+.label{display:block;font-size:8.5px;letter-spacing:2.5px;color:var(--muted);margin-bottom:6px;}
+.input,.textarea,.select{width:100%;background:var(--s2);border:1px solid var(--border2);border-radius:5px;padding:10px 13px;color:var(--text);font-family:var(--fb);font-size:11.5px;outline:none;transition:border-color .12s;resize:vertical;}
+.input:focus,.textarea:focus,.select:focus{border-color:rgba(201,245,60,.4);}
+.input::placeholder,.textarea::placeholder{color:var(--muted);}
+.select option{background:var(--s2);}
+.ir{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ir3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+.chip{padding:5px 13px;border-radius:20px;border:1px solid var(--border2);font-size:9.5px;cursor:pointer;color:var(--muted);background:transparent;font-family:var(--fb);transition:all .12s;letter-spacing:.5px;}
+.chip:hover{border-color:var(--lime);color:var(--text);}
+.chip.on{border-color:var(--lime);color:var(--lime);background:var(--lime-dim);}
+.ai-out{background:var(--s2);border:1px solid var(--border2);border-left:2px solid var(--lime);border-radius:6px;padding:18px;font-size:12px;line-height:1.85;color:var(--text);white-space:pre-wrap;min-height:80px;font-family:var(--fb);}
+.ai-out.loading{color:var(--muted);font-style:italic;animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.bar-row{margin-bottom:14px;}
+.bar-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-size:11px;}
+.bar-track{background:var(--s3);border-radius:20px;height:5px;}
+.bar-fill{height:100%;border-radius:20px;background:var(--lime);transition:width 1s ease;}
+.script-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:18px;margin-bottom:14px;transition:border-color .12s;}
+.script-card:hover{border-color:var(--border2);}
+.sc-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.sc-num{font-family:var(--fh);font-size:9px;font-weight:800;color:var(--lime);letter-spacing:2px;}
+.sc-hook{font-family:var(--fs);font-size:16px;line-height:1.4;margin-bottom:8px;font-style:italic;}
+.sc-preview{font-size:11px;color:var(--text);line-height:1.7;display:none;white-space:pre-wrap;}
+.sc-actions{display:flex;gap:8px;margin-top:12px;}
+.ptag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:8.5px;letter-spacing:.5px;font-weight:600;border:1px solid;font-family:var(--fh);}
+.ptag-ig{border-color:#c13584;color:#c13584;}
+.ptag-tt{border-color:var(--cyan);color:var(--cyan);}
+.ptag-x{border-color:#8a8a80;color:#8a8a80;}
+.ptag-yt{border-color:#ff0000;color:#ff0000;}
+.score-ring{width:72px;height:72px;border-radius:50%;border:3px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.score-val{font-family:var(--fh);font-weight:800;font-size:16px;color:var(--lime);}
+.score-val.mid{color:var(--gold);}
+.score-val.low{color:var(--red);}
+.kb-item{display:flex;align-items:flex-start;gap:12px;padding:13px;background:var(--s2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.kb-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.kb-cat{font-size:8px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;}
+.kb-text{font-size:11.5px;line-height:1.65;color:var(--text);}
+.kb-del{margin-left:auto;background:none;border:none;color:var(--muted2);cursor:pointer;font-size:18px;line-height:1;padding:0 4px;flex-shrink:0;transition:color .12s;}
+.kb-del:hover{color:var(--red);}
+.comp-row{display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:1px solid var(--border);border-radius:6px;margin-bottom:8px;}
+.comp-av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--lime),var(--cyan));display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:12px;color:var(--bg);flex-shrink:0;}
+.metric-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
+.metric-row:last-child{border-bottom:none;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+.ov-card{background:var(--s1);border:1px solid var(--border2);border-radius:12px;padding:40px;max-width:560px;width:100%;max-height:92vh;overflow-y:auto;}
+.ov-title{font-family:var(--fh);font-size:22px;font-weight:800;color:var(--lime);margin-bottom:6px;}
+.ov-sub{font-size:11px;color:var(--muted);margin-bottom:26px;line-height:1.7;}
+.step-bar{display:flex;gap:5px;margin-bottom:28px;}
+.step-dot{width:24px;height:3px;border-radius:3px;background:var(--border2);transition:background .2s;}
+.step-dot.done{background:var(--lime);}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px;}
+.cal-day-hdr{text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.cal-cell{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:8px 6px;min-height:70px;}
+.cal-wk{font-size:8px;color:var(--muted);letter-spacing:1px;margin-bottom:5px;}
+.cal-post{font-size:8px;padding:2px 5px;border-radius:3px;margin-top:3px;cursor:pointer;font-family:var(--fh);font-weight:700;letter-spacing:.5px;}
+.cal-post-ig{background:var(--lime);color:var(--bg);}
+.cal-post-tt{background:var(--cyan);color:var(--bg);}
+.cal-post-x{background:var(--s3);color:var(--text);border:1px solid var(--border2);}
+.cal-post-yt{background:var(--red);color:#fff;}
+.flex{display:flex;gap:10px;}
+.flex-c{display:flex;align-items:center;gap:10px;}
+.mla{margin-left:auto;}
+.mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
+.mb8{margin-bottom:8px;}.mb12{margin-bottom:12px;}.mb16{margin-bottom:16px;}.mb20{margin-bottom:20px;}
+.divider{height:1px;background:var(--border);margin:18px 0;}
+.txt-muted{color:var(--muted);font-size:11px;}
+.txt-lime{color:var(--lime);}
+.empty-state{text-align:center;padding:32px 20px;color:var(--muted);font-size:12px;line-height:1.7;}
+.empty-icon{font-size:28px;margin-bottom:12px;opacity:.4;}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--bg);border-top-color:transparent;border-radius:50%;animation:rot .55s linear infinite;vertical-align:middle;}
+@keyframes rot{to{transform:rotate(360deg)}}
+.notif{position:fixed;bottom:22px;right:22px;background:var(--lime);color:var(--bg);padding:11px 20px;border-radius:6px;font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:1px;z-index:999;transform:translateY(80px);transition:transform .25s;box-shadow:0 8px 32px rgba(201,245,60,.25);}
+.notif.on{transform:translateY(0);}
+.agent-link-box{background:var(--s2);border:1px solid rgba(201,245,60,.3);border-radius:8px;padding:16px 20px;margin-top:20px;}
+.agent-link-label{font-size:9px;letter-spacing:2px;color:var(--lime);font-family:var(--fh);font-weight:700;margin-bottom:8px;}
+.agent-link-url{font-size:11px;color:var(--text);word-break:break-all;}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="logo-wrap">
+    <div class="logo-mark">KULT</div>
+    <div class="logo-sub">AI CREATOR HUB</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Overview</div>
+    <div class="nav-item active" data-page="dashboard" onclick="nav(this)"><span class="nav-icon">◈</span>Dashboard</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Analityka</div>
+    <div class="nav-item" data-page="analytics" onclick="nav(this)"><span class="nav-icon">◉</span>Post Analyzer</div>
+    <div class="nav-item" data-page="competitors" onclick="nav(this)"><span class="nav-icon">⊕</span>Konkurencja</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Content AI</div>
+    <div class="nav-item" data-page="scripts" onclick="nav(this)"><span class="nav-icon">✦</span>Generator Skryptów<span class="nav-badge">CORE</span></div>
+    <div class="nav-item" data-page="reel" onclick="nav(this)"><span class="nav-icon">▶</span>Reel Analyzer</div>
+    <div class="nav-item" data-page="calendar" onclick="nav(this)"><span class="nav-icon">▦</span>Kalendarz</div>
+  </div>
+  <div class="nav-group">
+    <div class="nav-group-label">Brand</div>
+    <div class="nav-item" data-page="knowledge" onclick="nav(this)"><span class="nav-icon">◆</span>Baza Wiedzy</div>
+    <div class="nav-item" data-page="profile" onclick="nav(this)"><span class="nav-icon">◎</span>Audyt Profilu</div>
+    <div class="nav-item" data-page="dm" onclick="nav(this)"><span class="nav-icon">◇</span>DM Generator</div>
+    <div class="nav-item" data-page="agent" onclick="nav(this)"><span class="nav-icon">🧠</span>Knowledge Agent</div>
+  </div>
+  <div class="sidebar-footer">
+    <div class="brand-pill" onclick="openSetup()">
+      <div class="avatar" id="sAvatar">?</div>
+      <div><div class="brand-name" id="sName">Skonfiguruj markę</div><div class="brand-niche" id="sNiche">kliknij →</div></div>
+    </div>
+  </div>
+</aside>
+<main class="main">
+
+<!-- DASHBOARD -->
+<div class="page active" id="page-dashboard">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Dashboard</div><div class="ph-sub">OSTATNIE 30 DNI · WSZYSTKIE PLATFORMY</div></div>
+    <div class="ph-right">
+      <button class="btn btn-ghost btn-sm" onclick="openSetup()">⚙ Marka</button>
+      <button class="btn btn-sm" onclick="navTo('scripts')">✦ GENERUJ SKRYPT</button>
+    </div>
+  </div>
+  <div class="g4 mb20">
+    <div class="stat"><div class="stat-val" id="d-views">—</div><div class="stat-lbl">ŚR. WYŚWIETLENIA</div><div class="stat-ch" id="d-platform">skonfiguruj markę</div></div>
+    <div class="stat red"><div class="stat-val" id="d-followers">—</div><div class="stat-lbl">FOLLOWERS</div><div class="stat-ch">wszystkie platformy</div></div>
+    <div class="stat gold"><div class="stat-val" id="d-scripts">0</div><div class="stat-lbl">SKRYPTÓW W BAZIE</div><div class="stat-ch">baza AI rośnie</div></div>
+    <div class="stat cyan"><div class="stat-val" id="d-kb">0</div><div class="stat-lbl">WPISÓW WIEDZY</div><div class="stat-ch">Twój unikalny głos</div></div>
+  </div>
+  <div class="g2 mb20">
+    <div class="card">
+      <div class="card-title">✦ SZYBKI SKRYPT <span class="badge badge-lime">AI</span></div>
+      <div class="field"><label class="label">TEMAT / POMYSŁ</label><textarea class="textarea" id="q-topic" rows="2" placeholder="np. dlaczego 99% twórców nie monetyzuje..."></textarea></div>
+      <div class="ir mb12">
+        <div><label class="label">FORMAT</label><select class="select" id="q-format"><option>Talking Head</option><option>Rant / Kontrowersja</option><option>Storytime</option><option>Tutorial / Tips</option><option>POV / Scena</option></select></div>
+        <div><label class="label">PLATFORMA</label><select class="select" id="q-platform"><option>Instagram Reels</option><option>TikTok</option><option>X (Twitter)</option><option>YouTube Shorts</option></select></div>
+      </div>
+      <button class="btn" onclick="quickScript()" id="q-btn">GENERUJ</button>
+      <div class="ai-out mt12" id="q-out" style="display:none"></div>
+      <div class="flex mt8" id="q-actions" style="display:none">
+        <button class="btn btn-ghost btn-sm" onclick="notify('✦ Zapisano!')">SKOPIUJ</button>
+        <button class="btn btn-sm" onclick="navTo('scripts')">7 SKRYPTÓW →</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">◉ FORMAT PERFORMANCE</div>
+      <div class="bar-row"><div class="bar-top"><span>Talking Head</span><span class="txt-lime" id="b-th" style="font-family:var(--fh);font-weight:800">—</span></div><div class="bar-track"><div class="bar-fill" id="bf-th" style="width:0"></div></div></div>
+      <div class="bar-row"><div class="bar-top"><span>Rant / Kontrowersja</span><span style="font-family:var(--fh);font-weight:800;color:var(--red)" id="b-rant">—</span></div><div class="bar-track"><div class="bar-fill" id="bf-rant" style="width:0;background:var(--red)"></div></div></div>
+      <div class="bar-row"><div class="bar-top"><span>Storytime</span><span style="font-family:var(--fh);font-weight:800;color:var(--gold)" id="b-st">—</span></div><div class="bar-track"><div class="bar-fill" id="bf-st" style="width:0;background:var(--gold)"></div></div></div>
+      <div class="bar-row"><div class="bar-top"><span>Tutorial</span><span style="font-family:var(--fh);font-weight:800;color:var(--cyan)" id="b-tut">—</span></div><div class="bar-track"><div class="bar-fill" id="bf-tut" style="width:0;background:var(--cyan)"></div></div></div>
+      <div class="divider"></div>
+      <div class="card-title mt8" style="margin-bottom:8px">◈ BAZA DANYCH</div>
+      <div class="txt-muted" id="db-status">Łączę z bazą...</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">◆ OSTATNIE SKRYPTY <span class="badge badge-outline" id="d-sc-count">0</span></div>
+    <div id="d-recent-scripts"><div class="empty-state"><div class="empty-icon">✦</div>Brak skryptów. Wygeneruj pierwszy powyżej.</div></div>
+  </div>
+</div>
+
+<!-- POST ANALYTICS -->
+<div class="page" id="page-analytics">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Post Analyzer</div><div class="ph-sub">ANALIZUJ CO DZIAŁA · UCZ SIĘ · SKALUJ</div></div></div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">DANE POSTA</div>
+      <div class="field"><label class="label">URL POSTA (opcjonalnie)</label><input class="input" id="an-url" placeholder="https://instagram.com/reel/..."/></div>
+      <div class="field"><label class="label">TRANSKRYPT / OPIS CONTENTU</label><textarea class="textarea" id="an-transcript" rows="4" placeholder="Wklej tekst lub opisz o czym był post..."></textarea></div>
+      <div class="ir3 mb12">
+        <div><label class="label">WYŚWIETLENIA</label><input class="input" id="an-views" placeholder="np. 48000"/></div>
+        <div><label class="label">LAJKI</label><input class="input" id="an-likes" placeholder="np. 2100"/></div>
+        <div><label class="label">KOMENTARZE</label><input class="input" id="an-comments" placeholder="np. 89"/></div>
+      </div>
+      <div class="field"><label class="label">PLATFORMA</label><select class="select" id="an-platform"><option>Instagram</option><option>TikTok</option><option>X</option><option>YouTube</option></select></div>
+      <button class="btn" onclick="analyzePost()" id="an-btn">ANALIZUJ POST</button>
+    </div>
+    <div class="card" id="an-result" style="display:none">
+      <div class="card-title">WYNIK ANALIZY</div>
+      <div class="flex-c mb16"><div class="score-ring"><div class="score-val" id="an-score">—</div></div><div><div style="font-family:var(--fh);font-weight:800;font-size:15px" id="an-verdict">—</div><div class="txt-muted mt8" id="an-verdict-sub">—</div></div></div>
+    </div>
+  </div>
+  <div class="g2" id="an-details" style="display:none">
+    <div class="card"><div class="card-title">CO ZADZIAŁAŁO</div><div class="ai-out" id="an-worked"></div></div>
+    <div class="card"><div class="card-title">REKOMENDACJE</div><div class="ai-out" id="an-recs"></div></div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<div class="page" id="page-scripts">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Generator Skryptów</div><div class="ph-sub">7 SKRYPTÓW · TWÓJ GŁOS · TWOJA NISZA</div></div>
+    <button class="btn" onclick="generateWeekly()" id="w-btn">✦ GENERUJ 7 SKRYPTÓW</button>
+  </div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">PARAMETRY TYGODNIA</div>
+      <div class="field"><label class="label">GŁÓWNY TEMAT / FOCUS</label><input class="input" id="w-theme" placeholder="np. budowanie personal brand bez tysięcy followersów..."/></div>
+      <div class="field"><label class="label">NASTRÓJ TYGODNIA</label><select class="select" id="w-mood"><option>Motywacyjny / Inspirujący</option><option>Kontrowersyjny / Odważny</option><option>Edukacyjny / Wartościowy</option><option>Osobisty / Storytelling</option><option>Sprzedażowy / Konwersja</option></select></div>
+      <div class="field"><label class="label">PLATFORMY</label><div class="chip-row" id="w-platforms"><button class="chip on" onclick="toggleChip(this)">Instagram</button><button class="chip on" onclick="toggleChip(this)">TikTok</button><button class="chip on" onclick="toggleChip(this)">X (Twitter)</button><button class="chip on" onclick="toggleChip(this)">YouTube</button></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">TWOJE POMYSŁY I OBSERWACJE</div>
+      <div class="field"><label class="label">CO CHCESZ PORUSZYĆ W TYM TYGODNIU?</label><textarea class="textarea" id="w-ideas" rows="5" placeholder="Wpisz swoje obserwacje, tematy, cokolwiek się kręci w głowie..."></textarea></div>
+      <button class="btn btn-ghost btn-sm" onclick="saveIdea()">ZAPISZ DO BAZY WIEDZY</button>
+    </div>
+  </div>
+  <div class="ai-out loading" id="w-loading" style="display:none">⟳ AI analizuje Twoją bazę i generuje spersonalizowane skrypty...</div>
+  <div id="w-output" style="display:none"><div class="card-title mb16" style="font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:2.5px">TWOJE 7 SKRYPTÓW NA TEN TYDZIEŃ</div><div id="w-container"></div></div>
+</div>
+
+<!-- REEL ANALYZER -->
+<div class="page" id="page-reel">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Reel Analyzer</div><div class="ph-sub">TRANSKRYPT · SCORE · ADAPTACJA</div></div></div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">▶ ANALIZUJ REELA</div>
+      <div class="field"><label class="label">TRANSKRYPT LUB OPIS</label><textarea class="textarea" id="rl-transcript" rows="5" placeholder="Wklej transkrypt..."></textarea></div>
+      <div class="ir mb12">
+        <div><label class="label">PLATFORMA</label><select class="select" id="rl-platform"><option>Instagram</option><option>TikTok</option><option>YouTube</option><option>X</option></select></div>
+        <div><label class="label">WYŚWIETLENIA</label><input class="input" id="rl-views" placeholder="np. 2.3M"/></div>
+      </div>
+      <div class="field"><label class="label">KTO NAGRAŁ (nisza twórcy)</label><input class="input" id="rl-creator" placeholder="np. coach fitness, 200k followers"/></div>
+      <button class="btn" onclick="analyzeReel()" id="rl-btn">ANALIZUJ</button>
+    </div>
+    <div class="card" id="rl-result" style="display:none">
+      <div class="card-title">WYNIK ANALIZY</div>
+      <div class="flex-c mb16"><div class="score-ring"><div class="score-val" id="rl-score">—</div></div><div style="flex:1"><div style="font-family:var(--fh);font-weight:800;font-size:15px" id="rl-verdict">—</div><div class="txt-muted mt8" id="rl-sub">—</div></div></div>
+      <div class="divider"></div>
+      <div class="ai-out" id="rl-analysis" style="min-height:80px"></div>
+    </div>
+  </div>
+  <div class="card" id="rl-adapt" style="display:none">
+    <div class="card-title">ADAPTACJA DO TWOJEJ NISZY <span class="badge badge-lime">READY TO USE</span></div>
+    <div class="ai-out" id="rl-adapt-text"></div>
+    <div class="flex mt12"><button class="btn btn-sm" onclick="copyReel()">KOPIUJ ADAPTACJĘ</button></div>
+  </div>
+</div>
+
+<!-- CALENDAR -->
+<div class="page" id="page-calendar">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Kalendarz Treści</div><div class="ph-sub">PLANOWANIE · MIESIĄC · WSZYSTKIE PLATFORMY</div></div>
+    <button class="btn" onclick="generateCalendar()" id="cal-btn">▦ GENERUJ MIESIĄC</button>
+  </div>
+  <div class="g3 mb16">
+    <div><label class="label">POSTY / TYDZIEŃ</label><select class="select" id="cal-ppw"><option>3</option><option selected>5</option><option>7</option></select></div>
+    <div><label class="label">PLATFORMY</label><select class="select" id="cal-plat"><option>Instagram + TikTok</option><option>Instagram + TikTok + X</option><option selected>Wszystkie (IG+TT+X+YT)</option></select></div>
+    <div><label class="label">FORMAT MIX</label><select class="select" id="cal-mix"><option>70% Talking Head, 30% inne</option><option selected>Mix wszystkich formatów</option><option>Głównie storytelling</option></select></div>
+  </div>
+  <div class="ai-out loading" id="cal-loading" style="display:none">⟳ Generuję plan miesiąca...</div>
+  <div id="cal-output" style="display:none">
+    <div class="card">
+      <div class="card-title mb16">PLAN NA MIESIĄC</div>
+      <div class="cal-header"><div class="cal-day-hdr">PON</div><div class="cal-day-hdr">WT</div><div class="cal-day-hdr">ŚR</div><div class="cal-day-hdr">CZW</div><div class="cal-day-hdr">PT</div><div class="cal-day-hdr">SOB</div><div class="cal-day-hdr">ND</div></div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- KNOWLEDGE BASE -->
+<div class="page" id="page-knowledge">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Baza Wiedzy</div><div class="ph-sub">TWÓJ GŁOS · HISTORIA · PRZEKONANIA · AI SIĘ UCZY</div></div></div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">DODAJ DO BAZY</div>
+      <div class="field"><label class="label">KATEGORIA</label><select class="select" id="kb-cat"><option>📖 Historia / Doświadczenie</option><option>💡 Przekonanie / Wartość</option><option>✦ Pomysł na content</option><option>🎯 Udany skrypt</option><option>🔍 Obserwacja z rynku</option><option>👤 Historia klienta</option><option>⚙ Metoda / Framework</option></select></div>
+      <div class="field"><label class="label">TREŚĆ</label><textarea class="textarea" id="kb-text" rows="5" placeholder="Wszystko idzie tutaj — historia, obserwacja, pomysł, przekonanie..."></textarea></div>
+      <button class="btn" onclick="addKb()">DODAJ DO BAZY</button>
+    </div>
+    <div class="card">
+      <div class="card-title">ZAPYTAJ BAZĘ <span class="badge badge-lime">AI</span></div>
+      <div class="field"><label class="label">PYTANIE LUB TEMAT</label><textarea class="textarea" id="kb-q" rows="3" placeholder="np. jakie mam doświadczenia z X? Co mogę powiedzieć o Y?"></textarea></div>
+      <button class="btn" onclick="askKb()" id="kb-ask-btn">ZAPYTAJ AI</button>
+      <div class="ai-out mt12" id="kb-answer" style="display:none"></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">TWOJA BAZA <span class="badge badge-outline" id="kb-badge">0 wpisów</span></div>
+    <div id="kb-list"><div class="empty-state"><div class="empty-icon">◆</div>Baza jest pusta. Dodawaj doświadczenia, przekonania i pomysły — AI uczy się z każdego wpisu.</div></div>
+  </div>
+</div>
+
+<!-- PROFILE AUDIT -->
+<div class="page" id="page-profile">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Audyt Profilu</div><div class="ph-sub">BIO · HIGHLIGHTS · CTA</div></div></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">DANE PROFILU</div>
+      <div class="field"><label class="label">PLATFORMA</label><select class="select" id="pr-plat"><option>Instagram</option><option>TikTok</option><option>X (Twitter)</option></select></div>
+      <div class="field"><label class="label">AKTUALNE BIO</label><textarea class="textarea" id="pr-bio" rows="3" placeholder="Skopiuj swoje obecne bio..."></textarea></div>
+      <div class="field"><label class="label">TWOJA OFERTA</label><textarea class="textarea" id="pr-offer" rows="2" placeholder="Co sprzedajesz / oferujesz?"></textarea></div>
+      <div class="field"><label class="label">IDEALNY KLIENT</label><input class="input" id="pr-target" placeholder="Kto jest Twoim docelowym odbiorcą?"/></div>
+      <div class="field"><label class="label">HIGHLIGHTS / LINKI</label><input class="input" id="pr-hl" placeholder="np. brak / mam: About, Results"/></div>
+      <button class="btn" onclick="runAudit()" id="pr-btn">URUCHOM AUDYT</button>
+    </div>
+    <div>
+      <div class="card mb16" id="pr-score-card" style="display:none">
+        <div class="card-title">WYNIK PROFILU</div>
+        <div class="flex-c mb16"><div class="score-ring"><div class="score-val" id="pr-score">—</div></div><div><div style="font-family:var(--fh);font-weight:800;font-size:15px" id="pr-verdict">—</div><div class="txt-muted mt8">Ogólna ocena profilu</div></div></div>
+        <div id="pr-metrics"></div>
+      </div>
+      <div class="card" id="pr-recs-card" style="display:none"><div class="card-title">NOWE BIO + REKOMENDACJE</div><div class="ai-out" id="pr-recs"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPETITORS -->
+<div class="page" id="page-competitors">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Analiza Konkurencji</div><div class="ph-sub">MONITORUJ · UCZ SIĘ · PRZEŚCIGNIJ</div></div></div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">DODAJ KONKURENTA</div>
+      <div class="ir mb12">
+        <div><label class="label">HANDLE / NICK</label><input class="input" id="c-handle" placeholder="@nick"/></div>
+        <div><label class="label">PLATFORMA</label><select class="select" id="c-plat"><option>Instagram</option><option>TikTok</option><option>X</option><option>YouTube</option></select></div>
+      </div>
+      <div class="field"><label class="label">ICH NISZA</label><input class="input" id="c-niche" placeholder="np. personal brand coach"/></div>
+      <div class="field"><label class="label">ICH TREŚCI (tematy, transkrypty)</label><textarea class="textarea" id="c-content" rows="3" placeholder="Wklej kilka tematów ich postów..."></textarea></div>
+      <button class="btn" onclick="addCompetitor()" id="c-btn">ANALIZUJ + DODAJ</button>
+    </div>
+    <div class="card" id="c-analysis-card" style="display:none"><div class="card-title">ANALIZA AI <span class="badge badge-lime">INSIGHTS</span></div><div class="ai-out" id="c-analysis" style="min-height:200px"></div></div>
+  </div>
+  <div class="card"><div class="card-title">ŚLEDZONE KONTA <span class="badge badge-outline" id="c-badge">0</span></div><div id="c-list"><div class="empty-state"><div class="empty-icon">⊕</div>Brak śledzonych kont.</div></div></div>
+</div>
+
+<!-- DM GENERATOR -->
+<div class="page" id="page-dm">
+  <div class="ph"><div class="ph-left"><div class="ph-title">DM Generator</div><div class="ph-sub">KONWERTUJ FOLLOWERSÓW → KLIENTÓW</div></div></div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">GENERUJ ODPOWIEDŹ DM</div>
+      <div class="field"><label class="label">ETAP ROZMOWY</label><div class="chip-row"><button class="chip on" onclick="setDmStage('initial',this)">Pierwszy kontakt</button><button class="chip" onclick="setDmStage('followup',this)">Follow-up</button><button class="chip" onclick="setDmStage('objection',this)">Obiekcja</button><button class="chip" onclick="setDmStage('close',this)">Zamknięcie</button></div></div>
+      <div class="field"><label class="label">WIADOMOŚĆ OD KLIENTA</label><textarea class="textarea" id="dm-msg" rows="3" placeholder="Wklej co napisał..."></textarea></div>
+      <div class="field"><label class="label">TWOJA OFERTA / CENA</label><input class="input" id="dm-offer" placeholder="np. mentoring 3 miesiące, 3500 PLN"/></div>
+      <button class="btn" onclick="generateDm()" id="dm-btn">GENERUJ ODPOWIEDŹ</button>
+    </div>
+    <div class="card"><div class="card-title">ODPOWIEDŹ AI <span class="badge badge-lime">SPRZEDAŻ</span></div><div class="ai-out" id="dm-out" style="min-height:180px">Wpisz wiadomość i kliknij generuj...</div><div class="flex mt12"><button class="btn btn-ghost btn-sm" onclick="copyDm()">KOPIUJ</button><button class="btn btn-ghost btn-sm" onclick="saveDmTemplate()">ZAPISZ SZABLON</button></div></div>
+  </div>
+  <div class="card"><div class="card-title">SZABLONY DM <span class="badge badge-outline" id="dm-badge">0</span></div><div id="dm-list"><div class="empty-state"><div class="empty-icon">◇</div>Brak szablonów.</div></div></div>
+</div>
+
+<!-- KNOWLEDGE AGENT -->
+<div class="page" id="page-agent">
+  <div class="ph"><div class="ph-left"><div class="ph-title">Knowledge Agent</div><div class="ph-sub">TWÓJ AI ASYSTENT · PRYWATNY + PUBLICZNY LINK DLA KLIENTÓW</div></div>
+  <button class="btn btn-ghost btn-sm" onclick="condenseKnowledge()" id="condense-btn">🧠 KONDENSUJ WIEDZĘ</button>
+  </div>
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title">ZADAJ PYTANIE (prywatne)</div>
+      <div class="field"><label class="label">PYTANIE DO AI</label><textarea class="textarea" id="ag-q" rows="4" placeholder="np. Co wiem o swoich klientach? Jakie mam najlepsze skrypty? Jak mogę poruszyć temat X?"></textarea></div>
+      <button class="btn" onclick="askAgent()" id="ag-btn">ZAPYTAJ AGENTA</button>
+      <div class="ai-out mt12" id="ag-out" style="display:none"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">🔗 LINK DLA KLIENTÓW</div>
+      <div class="txt-muted mb12">Twoi klienci mogą zapytać Twojego AI asystenta o ofertę, filozofię i approach. Agent odpowiada w Twoim głosie, bazując na całej Twojej bazie wiedzy.</div>
+      <div class="agent-link-box">
+        <div class="agent-link-label">TWÓJ PUBLICZNY LINK</div>
+        <div class="agent-link-url" id="agent-url">Ładuję...</div>
+      </div>
+      <button class="btn btn-ghost btn-sm mt12" onclick="copyAgentLink()">KOPIUJ LINK</button>
+      <div class="divider"></div>
+      <div class="card-title" style="margin-bottom:8px">🧠 SKONDENSOWANA PAMIĘĆ</div>
+      <div class="txt-muted mb12">Co tydzień kliknij "Kondensuj wiedzę" aby AI zaktualizowało swoją pamięć o Twojej marce. Poprawi to jakość wszystkich skryptów i odpowiedzi.</div>
+      <div class="ai-out" id="condense-out" style="display:none;min-height:60px"></div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- SETUP OVERLAY -->
+<div class="overlay" id="setup-overlay">
+  <div class="ov-card">
+    <div class="ov-title">KONFIGURUJ MARKĘ</div>
+    <div class="ov-sub">Twoje dane trafiają bezpośrednio do Supabase i są dostępne dla wszystkich agentów AI.</div>
+    <div class="step-bar" id="step-bar"><div class="step-dot done"></div><div class="step-dot"></div><div class="step-dot"></div><div class="step-dot"></div></div>
+    <div id="step-1">
+      <div class="field"><label class="label">IMIĘ / NAZWA MARKI</label><input class="input" id="s-name" placeholder="np. Łukasz Nowak"/></div>
+      <div class="field"><label class="label">NISZA / BRANŻA</label><input class="input" id="s-niche" placeholder="np. personal brand dla ekspertów i twórców"/></div>
+      <div class="field"><label class="label">TWOJA OFERTA</label><textarea class="textarea" id="s-offer" rows="2" placeholder="Co sprzedajesz?"></textarea></div>
+      <div class="field"><label class="label">IDEALNY KLIENT</label><textarea class="textarea" id="s-target" rows="2" placeholder="Kim jest? Jakie ma problemy?"></textarea></div>
+      <button class="btn" onclick="goStep(2)">DALEJ →</button>
+    </div>
+    <div id="step-2" style="display:none">
+      <div class="field"><label class="label">TWOJA HISTORIA POCHODZENIA</label><textarea class="textarea" id="s-origin" rows="4" placeholder="Skąd przyszedłeś? Co Cię ukształtowało?"></textarea></div>
+      <div class="field"><label class="label">TWOJE PRZEKONANIA / WARTOŚCI</label><textarea class="textarea" id="s-beliefs" rows="3" placeholder="W co wierzysz? Twoja filozofia?"></textarea></div>
+      <div class="field"><label class="label">KONTROWERSYJNY TAKE</label><textarea class="textarea" id="s-take" rows="2" placeholder="Co różni Cię od innych w branży?"></textarea></div>
+      <div class="flex"><button class="btn btn-ghost" onclick="goStep(1)">← WRÓĆ</button><button class="btn" onclick="goStep(3)">DALEJ →</button></div>
+    </div>
+    <div id="step-3" style="display:none">
+      <div class="field"><label class="label">STYL KOMUNIKACJI</label><div class="chip-row" id="tone-chips"><button class="chip on" onclick="pickTone(this,'Bezpośredni i odważny')">Bezpośredni</button><button class="chip" onclick="pickTone(this,'Edukacyjny i merytoryczny')">Edukacyjny</button><button class="chip" onclick="pickTone(this,'Inspirujący i motywacyjny')">Inspirujący</button><button class="chip" onclick="pickTone(this,'Kontrowersyjny i prowokacyjny')">Kontrowersyjny</button></div></div>
+      <div class="field"><label class="label">GŁÓWNA PLATFORMA</label><select class="select" id="s-mainplat"><option>Instagram</option><option>TikTok</option><option>X</option><option>YouTube</option></select></div>
+      <div class="ir mb12">
+        <div><label class="label">FOLLOWERS (łącznie)</label><input class="input" id="s-fol" placeholder="np. 2400"/></div>
+        <div><label class="label">ŚR. WYŚWIETLENIA / POST</label><input class="input" id="s-views" placeholder="np. 3000"/></div>
+      </div>
+      <div class="flex"><button class="btn btn-ghost" onclick="goStep(2)">← WRÓĆ</button><button class="btn" onclick="goStep(4)">DALEJ →</button></div>
+    </div>
+    <div id="step-4" style="display:none">
+      <div class="field"><label class="label">CELE NA 90 DNI</label><textarea class="textarea" id="s-goals" rows="3" placeholder="np. 10k followers, 5 klientów, 8000 PLN/mies..."></textarea></div>
+      <div class="field"><label class="label">DOTYCHCZASOWE WYNIKI</label><textarea class="textarea" id="s-results" rows="2" placeholder="Co już osiągnąłeś? Co sprawdziło się w contencie?"></textarea></div>
+      <div class="flex"><button class="btn btn-ghost" onclick="goStep(3)">← WRÓĆ</button><button class="btn" onclick="saveBrand()" id="save-brand-btn">✦ ZAPISZ I ZACZNIJ</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// API endpoint — Supabase Edge Function
+const API = 'https://qxsytudsseskvweexznh.supabase.co/functions/v1/kult-api';
+let dmStage = 'initial';
+let tone = 'Bezpośredni i odważny';
+let reelAdaptText = '';
+let dmTemplates = [];
+let currentStep = 1;
+
+// ── INIT ──
+window.onload = async () => {
+  document.getElementById('agent-url').textContent = window.location.origin + '/agent.html';
+  await loadBrand();
+  await loadStats();
+  await loadRecentScripts();
+  loadKb();
+  loadCompetitors();
+  loadDmTemplates();
+};
+
+async function api(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${API}/${path}`, opts);
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
+  return r.json();
+}
+
+// ── BRAND ──
+async function loadBrand() {
+  try {
+    const b = await api('brand');
+    if (b?.name) {
+      document.getElementById('sAvatar').textContent = b.name.charAt(0).toUpperCase();
+      document.getElementById('sName').textContent = b.name;
+      document.getElementById('sNiche').textContent = (b.niche||'').substring(0,28)+'…';
+      document.getElementById('d-views').textContent = b.avg_views ? Number(b.avg_views).toLocaleString('pl') : '—';
+      document.getElementById('d-followers').textContent = b.followers ? Number(b.followers).toLocaleString('pl') : '—';
+      document.getElementById('d-platform').textContent = b.main_platform || '—';
+      document.getElementById('db-status').textContent = '✓ Połączono z Supabase · Dane zapisywane w chmurze';
+      document.getElementById('db-status').style.color = 'var(--lime)';
+      // Pre-fill setup
+      ['name','niche','offer','target','origin','beliefs','take','goals','results'].forEach(k => {
+        const el = document.getElementById('s-'+k) || document.getElementById('s-'+k.replace('_',''));
+        if (el) el.value = b[k==='take'?'contrarian_take':k] || '';
+      });
+      document.getElementById('s-fol').value = b.followers || '';
+      document.getElementById('s-views').value = b.avg_views || '';
+    } else {
+      document.getElementById('setup-overlay').style.display = 'flex';
+    }
+  } catch(e) {
+    document.getElementById('db-status').textContent = '⚠ Brak połączenia — sprawdź klucz Anthropic w Supabase';
+    document.getElementById('db-status').style.color = 'var(--red)';
+  }
+}
+
+async function saveBrand() {
+  const btn = document.getElementById('save-brand-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> ZAPISUJĘ...';
+  try {
+    await api('brand', 'POST', {
+      name: v('s-name'), niche: v('s-niche'), offer: v('s-offer'), target: v('s-target'),
+      origin: v('s-origin'), beliefs: v('s-beliefs'), contrarian_take: v('s-take'),
+      tone, main_platform: v('s-mainplat')||'Instagram',
+      platforms: ['Instagram','TikTok','X','YouTube'],
+      goals: v('s-goals'), results: v('s-results'),
+      followers: parseInt(v('s-fol'))||0, avg_views: parseInt(v('s-views'))||0
+    });
+    document.getElementById('setup-overlay').style.display = 'none';
+    await loadBrand();
+    notify('✦ Marka zapisana w Supabase!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '✦ ZAPISZ I ZACZNIJ';
+}
+
+// ── STATS ──
+async function loadStats() {
+  try {
+    const s = await api('stats');
+    document.getElementById('d-kb').textContent = s.knowledge_entries || 0;
+    document.getElementById('d-scripts').textContent = s.total_scripts || 0;
+    document.getElementById('d-sc-count').textContent = s.total_scripts || 0;
+    // Animate bars after brand loaded
+    setTimeout(() => {
+      ['th:68%','rant:21%','st:8%','tut:3%'].forEach(pair => {
+        const [id, val] = pair.split(':');
+        const el = document.getElementById('b-'+id);
+        const bar = document.getElementById('bf-'+id);
+        if(el) el.textContent = val;
+        if(bar) bar.style.width = val;
+      });
+    }, 400);
+  } catch(e) { /* silent */ }
+}
+
+// ── RECENT SCRIPTS ──
+async function loadRecentScripts() {
+  try {
+    const scripts = await api('scripts');
+    const el = document.getElementById('d-recent-scripts');
+    if (!scripts?.length) return;
+    el.innerHTML = scripts.slice(0,3).map(s => `
+      <div class="kb-item">
+        <div class="kb-icon">✦</div>
+        <div style="flex:1">
+          <div class="kb-cat">${s.format||'SKRYPT'} · ${s.platform||''} · ${new Date(s.created_at).toLocaleDateString('pl-PL')}</div>
+          <div class="kb-text">${(s.hook||s.title||s.full_text||'').substring(0,120)}…</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { /* silent */ }
+}
+
+// ── NAV ──
+function nav(el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+el.dataset.page).classList.add('active');
+  el.classList.add('active');
+}
+function navTo(page) { const el = document.querySelector(`[data-page="${page}"]`); if(el) nav(el); }
+function openSetup() { document.getElementById('setup-overlay').style.display='flex'; }
+
+// ── SETUP STEPS ──
+function goStep(n) {
+  document.getElementById('step-'+currentStep).style.display='none';
+  document.getElementById('step-'+n).style.display='block';
+  currentStep = n;
+  document.querySelectorAll('.step-dot').forEach((d,i)=>d.classList.toggle('done',i<n));
+}
+function pickTone(el, t) {
+  document.querySelectorAll('#tone-chips .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); tone = t;
+}
+function toggleChip(el) { el.classList.toggle('on'); }
+function setDmStage(s, el) {
+  document.querySelectorAll('#page-dm .chip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on'); dmStage = s;
+}
+
+// ── QUICK SCRIPT ──
+async function quickScript() {
+  const topic = v('q-topic'); if(!topic){notify('Wpisz temat!');return;}
+  const btn = document.getElementById('q-btn');
+  const out = document.getElementById('q-out');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> GENERUJĘ…';
+  out.style.display='block'; out.className='ai-out loading'; out.textContent='AI tworzy Twój skrypt…';
+  document.getElementById('q-actions').style.display='none';
+  try {
+    const d = await api('scripts/quick','POST',{topic, format:v('q-format'), platform:v('q-platform')});
+    out.className='ai-out'; out.textContent=d.text;
+    document.getElementById('q-actions').style.display='flex';
+    await loadStats(); await loadRecentScripts();
+  } catch(e) { out.className='ai-out'; out.textContent='Błąd: '+e.message; }
+  btn.disabled=false; btn.textContent='GENERUJ';
+}
+
+// ── WEEKLY SCRIPTS ──
+async function generateWeekly() {
+  const btn = document.getElementById('w-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> GENERUJĘ…';
+  document.getElementById('w-loading').style.display='block';
+  document.getElementById('w-output').style.display='none';
+  const platforms = [...document.querySelectorAll('#w-platforms .chip.on')].map(c=>c.textContent.trim());
+  try {
+    const d = await api('scripts/weekly','POST',{theme:v('w-theme'),mood:v('w-mood'),platforms,ideas:v('w-ideas')});
+    renderWeekly(d.text);
+    document.getElementById('w-output').style.display='block';
+    await loadStats();
+    notify(`✦ ${d.saved} skryptów zapisanych!`);
+  } catch(e) { notify('Błąd: '+e.message); }
+  document.getElementById('w-loading').style.display='none';
+  btn.disabled=false; btn.textContent='✦ GENERUJ 7 SKRYPTÓW';
+}
+
+function renderWeekly(text) {
+  const container = document.getElementById('w-container');
+  const blocks = text.split(/={3,}/).filter(b=>b.trim());
+  container.innerHTML='';
+  blocks.forEach((block,i) => {
+    const hookMatch = block.match(/HOOK:\s*([^\n]+)/i);
+    const titleMatch = block.match(/TYTUŁ:\s*([^\n]+)/i);
+    const hook = hookMatch?.[1]?.trim()||'';
+    const title = titleMatch?.[1]?.trim()||`Skrypt ${i+1}`;
+    const headerLine = block.match(/SKRYPT \d+[^\n]*/i)?.[0]||'';
+    const hdr = headerLine.toLowerCase();
+    const ptag = hdr.includes('tiktok')?'ptag-tt':hdr.includes(' x ')?'ptag-x':hdr.includes('youtube')?'ptag-yt':'ptag-ig';
+    const pname = hdr.includes('tiktok')?'TikTok':hdr.includes(' x ')?'X':hdr.includes('youtube')?'YouTube':'Instagram';
+    const sepIdx = block.indexOf('---');
+    const fullText = sepIdx>-1?block.substring(sepIdx+3).trim():block.trim();
+    window._ws = window._ws||{}; window._ws[i]={fullText};
+    const card = document.createElement('div');
+    card.className='script-card';
+    card.innerHTML=`<div class="sc-meta"><span class="sc-num">SKRYPT ${i+1}</span><span class="ptag ${ptag}">${pname}</span></div>
+      <div class="sc-hook">"${hook||title}"</div>
+      <div class="sc-preview" id="sc-${i}">${fullText}</div>
+      <div class="sc-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleSc(${i})">ROZWIŃ</button>
+        <button class="btn btn-sm" onclick="copyText(window._ws[${i}].fullText)">KOPIUJ</button>
+      </div>`;
+    container.appendChild(card);
+  });
+}
+function toggleSc(i) {
+  const el = document.getElementById('sc-'+i);
+  const btn = el.nextElementSibling.querySelector('button');
+  const show = el.style.display==='none'||!el.style.display;
+  el.style.display=show?'block':'none';
+  btn.textContent=show?'ZWIŃ':'ROZWIŃ';
+}
+
+async function saveIdea() {
+  const idea = v('w-ideas'); if(!idea)return;
+  await api('knowledge','POST',{category:'✦ Pomysł na content',content:idea,source:'manual'});
+  notify('✦ Pomysł zapisany!'); loadKb();
+}
+
+// ── POST ANALYZER ──
+async function analyzePost() {
+  const transcript=v('an-transcript'), url=v('an-url');
+  if(!transcript&&!url){notify('Wklej transkrypt lub URL!');return;}
+  const btn=document.getElementById('an-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> ANALIZUJĘ…';
+  try {
+    const d = await api('analytics/post','POST',{transcript,url,views:v('an-views'),likes:v('an-likes'),comments:v('an-comments'),platform:v('an-platform')});
+    const sc=d.score||70;
+    document.getElementById('an-score').textContent=sc;
+    document.getElementById('an-score').className='score-val '+(sc<50?'low':sc<70?'mid':'');
+    document.getElementById('an-verdict').textContent=d.verdict||'—';
+    document.getElementById('an-verdict-sub').textContent=d.verdict_sub||'';
+    document.getElementById('an-worked').textContent=d.worked||'';
+    document.getElementById('an-recs').textContent=d.recommendations||'';
+    document.getElementById('an-result').style.display='block';
+    document.getElementById('an-details').style.display='grid';
+  } catch(e){notify('Błąd: '+e.message);}
+  btn.disabled=false; btn.textContent='ANALIZUJ POST';
+}
+
+// ── REEL ANALYZER ──
+async function analyzeReel() {
+  const transcript=v('rl-transcript'); if(!transcript){notify('Wklej transkrypt!');return;}
+  const btn=document.getElementById('rl-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> ANALIZUJĘ…';
+  try {
+    const d = await api('analytics/reel','POST',{transcript,platform:v('rl-platform'),views:v('rl-views'),creator:v('rl-creator')});
+    document.getElementById('rl-score').textContent=d.score||70;
+    document.getElementById('rl-verdict').textContent=d.verdict||'—';
+    document.getElementById('rl-sub').textContent=d.worth_it||'';
+    document.getElementById('rl-analysis').textContent=d.analysis||'';
+    document.getElementById('rl-result').style.display='block';
+    reelAdaptText=d.adaptation||'';
+    document.getElementById('rl-adapt-text').textContent=reelAdaptText;
+    document.getElementById('rl-adapt').style.display='block';
+  } catch(e){notify('Błąd: '+e.message);}
+  btn.disabled=false; btn.textContent='ANALIZUJ';
+}
+function copyReel(){copyText(reelAdaptText);}
+
+// ── CALENDAR ──
+async function generateCalendar() {
+  const btn=document.getElementById('cal-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> GENERUJĘ…';
+  document.getElementById('cal-loading').style.display='block';
+  document.getElementById('cal-output').style.display='none';
+  try {
+    const d = await api('calendar/generate','POST',{posts_per_week:v('cal-ppw'),platforms:v('cal-plat'),format_mix:v('cal-mix')});
+    renderCalendar(d.text);
+    document.getElementById('cal-output').style.display='block';
+  } catch(e){notify('Błąd: '+e.message);}
+  document.getElementById('cal-loading').style.display='none';
+  btn.disabled=false; btn.textContent='▦ GENERUJ MIESIĄC';
+}
+function renderCalendar(text) {
+  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
+  const days=['PON','WT','ŚR','CZW','PT','SOB','ND'];
+  for(let w=1;w<=4;w++) {
+    days.forEach(day=>{
+      const cell=document.createElement('div'); cell.className='cal-cell';
+      cell.innerHTML=`<div class="cal-wk">T${w}</div>`;
+      const re=new RegExp(`T${w}-${day}[:\\s]+([^\\n]*)`, 'i');
+      const m=text.match(re);
+      if(m){
+        const c=m[1].trim();
+        const cls=c.match(/\bTT\b|tiktok/i)?'cal-post-tt':c.match(/\bYT\b|youtube/i)?'cal-post-yt':c.match(/\bX\b(?!L)/i)&&!c.match(/IG/i)?'cal-post-x':'cal-post-ig';
+        cell.innerHTML+=`<div class="cal-post ${cls}" title="${c}">${c.replace(/^(IG|TT|YT|X)\s*[·|]\s*/i,'').substring(0,22)}…</div>`;
+      }
+      grid.appendChild(cell);
+    });
+  }
+}
+
+// ── KNOWLEDGE BASE ──
+async function addKb() {
+  const text=v('kb-text'); if(!text){notify('Wpisz treść!');return;}
+  const btn=document.querySelector('[onclick="addKb()"]');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  try {
+    await api('knowledge','POST',{category:v('kb-cat'),content:text,source:'manual'});
+    document.getElementById('kb-text').value='';
+    await loadKb(); await loadStats();
+    notify('✦ Dodano! AI oceniło ważność wpisu.');
+  } catch(e){notify('Błąd: '+e.message);}
+  btn.disabled=false; btn.textContent='DODAJ DO BAZY';
+}
+
+async function loadKb() {
+  try {
+    const items = await api('knowledge');
+    document.getElementById('kb-badge').textContent=(items?.length||0)+' wpisów';
+    document.getElementById('d-kb').textContent=items?.length||0;
+    const list=document.getElementById('kb-list');
+    if(!items?.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">◆</div>Baza jest pusta.</div>';return;}
+    list.innerHTML=items.map(item=>`
+      <div class="kb-item">
+        <div class="kb-icon">${item.category?.charAt(0)||'◆'}</div>
+        <div style="flex:1">
+          <div class="kb-cat">${item.category?.replace(/^./,'')||''} · Ważność: ${item.importance}/10 · ${new Date(item.created_at).toLocaleDateString('pl-PL')}</div>
+          <div class="kb-text">${item.content.substring(0,150)}${item.content.length>150?'…':''}</div>
+        </div>
+        <button class="kb-del" onclick="removeKb('${item.id}')">×</button>
+      </div>`).join('');
+  } catch(e){/* silent */}
+}
+
+async function removeKb(id) {
+  await api('knowledge/'+id,'DELETE');
+  await loadKb(); await loadStats();
+}
+
+async function askKb() {
+  const q=v('kb-q'); if(!q){notify('Wpisz pytanie!');return;}
+  const btn=document.getElementById('kb-ask-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> PYTAM…';
+  const ans=document.getElementById('kb-answer');
+  ans.style.display='block'; ans.className='ai-out loading mt12'; ans.textContent='AI przeszukuje Twoją bazę…';
+  try {
+    const d=await api('knowledge/ask','POST',{question:q,public_access:false});
+    ans.className='ai-out mt12'; ans.textContent=d.answer||'';
+  } catch(e){ans.className='ai-out mt12';ans.textContent='Błąd: '+e.message;}
+  btn.disabled=false; btn.textContent='ZAPYTAJ AI';
+}
+
+// ── PROFILE AUDIT ──
+async function runAudit() {
+  const btn=document.getElementById('pr-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> AUDYTUJĘ…';
+  try {
+    const d=await api('profile/audit','POST',{bio:v('pr-bio'),offer:v('pr-offer'),target:v('pr-target'),highlights:v('pr-hl'),platform:v('pr-plat')});
+    const sc=d.score||5;
+    document.getElementById('pr-score').textContent=sc+'/10';
+    document.getElementById('pr-score').className='score-val '+(sc>=8?'':sc>=6?'mid':'low');
+    document.getElementById('pr-verdict').textContent=d.verdict||'—';
+    document.getElementById('pr-metrics').innerHTML=`
+      <div class="metric-row"><span>BIO</span><span style="font-family:var(--fh);font-weight:800;color:${d.bio_score>=7?'var(--lime)':'var(--red)'}">${d.bio_score||5}/10</span></div>
+      <div class="metric-row"><span>HIGHLIGHTS</span><span style="font-family:var(--fh);font-weight:800;color:var(--gold)">${v('pr-hl')?'6/10':'2/10'}</span></div>`;
+    document.getElementById('pr-score-card').style.display='block';
+    document.getElementById('pr-recs').textContent=`📝 NOWE BIO:\n${d.new_bio}\n\n💡 FEEDBACK:\n${d.bio_feedback}\n\n📌 BRAKUJĄCE HIGHLIGHTS:\n${d.missing_highlights}\n\n✦ REKOMENDACJE:\n${d.recommendations}`;
+    document.getElementById('pr-recs-card').style.display='block';
+  } catch(e){notify('Błąd: '+e.message);}
+  btn.disabled=false; btn.textContent='URUCHOM AUDYT';
+}
+
+// ── COMPETITORS ──
+async function addCompetitor() {
+  const handle=v('c-handle'); if(!handle){notify('Wpisz handle!');return;}
+  const btn=document.getElementById('c-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> ANALIZUJĘ…';
+  try {
+    const d=await api('competitors','POST',{handle,platform:v('c-plat'),niche:v('c-niche'),sample_content:v('c-content')});
+    document.getElementById('c-analysis').textContent=d.analysis||'';
+    document.getElementById('c-analysis-card').style.display='block';
+    document.getElementById('c-handle').value=''; document.getElementById('c-content').value='';
+    await loadCompetitors();
+  } catch(e){notify('Błąd: '+e.message);}
+  btn.disabled=false; btn.textContent='ANALIZUJ + DODAJ';
+}
+
+async function loadCompetitors() {
+  try {
+    const comps=await api('competitors');
+    document.getElementById('c-badge').textContent=comps?.length||0;
+    const list=document.getElementById('c-list');
+    if(!comps?.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">⊕</div>Brak śledzonych kont.</div>';return;}
+    list.innerHTML=comps.map(c=>`
+      <div class="comp-row">
+        <div class="comp-av">${c.handle.replace('@','').charAt(0).toUpperCase()}</div>
+        <div style="flex:1"><div style="font-family:var(--fh);font-weight:700;font-size:12px">${c.handle}</div><div class="txt-muted">${c.platform} · ${c.niche}</div></div>
+      </div>`).join('');
+  } catch(e){/* silent */}
+}
+
+// ── DM GENERATOR ──
+async function generateDm() {
+  const msg=v('dm-msg'); if(!msg){notify('Wklej wiadomość!');return;}
+  const btn=document.getElementById('dm-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> GENERUJĘ…';
+  try {
+    const d=await api('dm/generate','POST',{message:msg,stage:dmStage,offer:v('dm-offer')});
+    document.getElementById('dm-out').textContent=d.text||'';
+  } catch(e){document.getElementById('dm-out').textContent='Błąd: '+e.message;}
+  btn.disabled=false; btn.textContent='GENERUJ ODPOWIEDŹ';
+}
+async function saveDmTemplate() {
+  const response=document.getElementById('dm-out').textContent;
+  if(!response||response.includes('Wpisz wiadomość'))return;
+  await api('dm/template','POST',{stage:dmStage,message:v('dm-msg'),response});
+  await loadDmTemplates(); notify('✦ Szablon zapisany!');
+}
+async function loadDmTemplates() {
+  try {
+    const items=await api('dm/templates');
+    document.getElementById('dm-badge').textContent=items?.length||0;
+    const list=document.getElementById('dm-list');
+    if(!items?.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">◇</div>Brak szablonów.</div>';return;}
+    list.innerHTML=items.map(t=>`
+      <div class="kb-item">
+        <div class="kb-icon">◇</div>
+        <div style="flex:1">
+          <div class="kb-cat">${t.stage} · ${new Date(t.created_at).toLocaleDateString('pl-PL')}</div>
+          <div class="kb-text" style="color:var(--muted);margin-bottom:4px;font-size:10px">"${(t.message||'').substring(0,50)}…"</div>
+          <div class="kb-text">${(t.response||'').substring(0,120)}…</div>
+        </div>
+      </div>`).join('');
+  } catch(e){/* silent */}
+}
+function copyDm(){copyText(document.getElementById('dm-out').textContent);}
+
+// ── KNOWLEDGE AGENT ──
+async function askAgent() {
+  const q=v('ag-q'); if(!q){notify('Wpisz pytanie!');return;}
+  const btn=document.getElementById('ag-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> PYTAM AGENTA…';
+  const out=document.getElementById('ag-out');
+  out.style.display='block'; out.className='ai-out loading mt12'; out.textContent='Agent przeszukuje całą bazę wiedzy…';
+  try {
+    const d=await api('knowledge/ask','POST',{question:q,public_access:false});
+    out.className='ai-out mt12'; out.textContent=d.answer||'';
+  } catch(e){out.className='ai-out mt12'; out.textContent='Błąd: '+e.message;}
+  btn.disabled=false; btn.textContent='ZAPYTAJ AGENTA';
+}
+
+async function condenseKnowledge() {
+  const btn=document.getElementById('condense-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> KONDENSUJE…';
+  const out=document.getElementById('condense-out');
+  out.style.display='block'; out.className='ai-out loading'; out.textContent='Agent analizuje całą Twoją bazę…';
+  try {
+    const d=await api('knowledge/condense','POST',{});
+    out.className='ai-out'; out.textContent=d.summary||'';
+    notify('✦ Pamięć AI zaktualizowana!');
+  } catch(e){out.className='ai-out'; out.textContent='Błąd: '+e.message;}
+  btn.disabled=false; btn.innerHTML='🧠 KONDENSUJ WIEDZĘ';
+}
+
+function copyAgentLink() {
+  copyText(window.location.origin+'/agent.html');
+  notify('✦ Link skopiowany!');
+}
+
+// ── UTILS ──
+function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
+function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),2800);}
+function copyText(text){navigator.clipboard.writeText(text).then(()=>notify('✦ Skopiowano!'));}
+</script>
+</body>
+</html>
