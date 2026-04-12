@@ -167,6 +167,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
   <div class="nav-group">
     <div class="nav-group-label">Content AI</div>
     <div class="nav-item" data-page="scripts" onclick="nav(this)"><span class="nav-icon">✦</span>Generator Skryptów<span class="nav-badge">CORE</span></div>
+    <div class="nav-item" data-page="script-agent" onclick="nav(this)"><span class="nav-icon">🤖</span>Script Agent<span class="nav-badge" style="background:var(--purple)">AI</span></div>
     <div class="nav-item" data-page="reel" onclick="nav(this)"><span class="nav-icon">▶</span>Reel Analyzer</div>
     <div class="nav-item" data-page="calendar" onclick="nav(this)"><span class="nav-icon">▦</span>Kalendarz</div>
   </div>
@@ -445,6 +446,56 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 </div>
 
 
+
+<!-- SCRIPT AGENT -->
+<div class="page" id="page-script-agent">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Script Agent</div><div class="ph-sub">TWÓJ GŁOS · TWOJA HISTORIA · CEL KONWERSJI</div></div>
+  </div>
+  <div style="background:var(--s2);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:16px 20px;margin-bottom:20px;">
+    <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple);margin-bottom:6px">🤖 JAK DZIAŁA SCRIPT AGENT</div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.7">Agent czyta <strong style="color:var(--text)">całą Twoją bazę wiedzy</strong>, historię, przekonania i przykładowe skrypty — i pisze <strong style="color:var(--text)">w Twoim głosie</strong>. Każdy skrypt zawiera Twoje osobiste doświadczenia i jest zoptymalizowany pod konkretny cel konwersji.</div>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">🤖 GENERUJ SKRYPT</div>
+      <div class="field"><label class="label">TEMAT / POMYSŁ</label><textarea class="textarea" id="sa-topic" rows="3" placeholder="np. historia jak straciłem pierwszego klienta i czego mnie nauczyła..."></textarea></div>
+      <div class="ir mb12">
+        <div><label class="label">PLATFORMA</label><select class="select" id="sa-platform"><option>YouTube Shorts</option><option>YouTube</option><option>Instagram Reels</option><option>TikTok</option><option>X (Twitter)</option></select></div>
+        <div><label class="label">FORMAT</label><select class="select" id="sa-format"><option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option></select></div>
+      </div>
+      <div class="field"><label class="label">CEL KONWERSJI</label>
+        <select class="select" id="sa-conversion">
+          <option value="dm_inquiry">Napisać DM z pytaniem</option>
+          <option value="booking_call">Zarezerwować rozmowę</option>
+          <option value="follow_profile">Obserwować profil</option>
+          <option value="product_purchase">Kupić produkt / kurs</option>
+          <option value="link_click">Kliknąć link w bio</option>
+          <option value="save_share">Zapisać / udostępnić</option>
+        </select>
+      </div>
+      <button class="btn" onclick="runScriptAgent()" id="sa-btn" style="background:var(--purple);color:#fff">🤖 GENERUJ Z AGENT AI</button>
+      <div style="margin-top:8px;font-size:10px;color:var(--muted)">Agent przeczyta całą Twoją bazę przed generowaniem (~15-20 sek)</div>
+    </div>
+    <div class="card">
+      <div class="card-title">WYGENEROWANY SKRYPT</div>
+      <div class="ai-out" id="sa-script" style="min-height:220px">Wpisz temat i kliknij generuj...</div>
+      <div class="flex mt12" id="sa-actions" style="display:none">
+        <button class="btn btn-sm" style="background:var(--purple);color:#fff" onclick="copyText(document.getElementById('sa-script').textContent)">KOPIUJ</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveAgentScript()">ZAPISZ DO BAZY</button>
+      </div>
+    </div>
+  </div>
+  <div class="card mt20" id="sa-analysis-card" style="display:none">
+    <div class="card-title">ANALIZA — dlaczego ten skrypt zadziała</div>
+    <div class="ai-out" id="sa-analysis"></div>
+  </div>
+  <div class="card mt20">
+    <div class="card-title">OSTATNIE SESJE AGENTA <span class="badge badge-outline" id="sa-count">0</span></div>
+    <div id="sa-sessions"><div class="empty-state"><div class="empty-icon">🤖</div>Brak sesji.</div></div>
+  </div>
+</div>
+
 <!-- CHANNELS & METRICS -->
 <div class="page" id="page-channels">
   <div class="ph">
@@ -509,7 +560,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
         <option>YouTube</option><option>Instagram</option><option>TikTok</option><option>X (Twitter)</option>
       </select>
     </div>
-    <div class="field"><label class="label">URL KANAŁU / PROFILU</label><input class="input" id="nc-url" placeholder="https://youtube.com/@twoj-kanal"/></div>
+    <div class="field"><label class="label">URL KANAŁU / PROFILU</label><div style="display:flex;gap:8px"><input class="input" id="nc-url" placeholder="https://youtube.com/@twoj-kanal" style="flex:1"/><button class="btn btn-ghost btn-sm" onclick="previewYouTube()" id="nc-preview-btn" style="flex-shrink:0">PODGLĄD</button></div></div>
+    <div id="nc-preview-box" style="display:none;margin-bottom:14px"></div>
     <div class="field"><label class="label">NAZWA KANAŁU</label><input class="input" id="nc-name" placeholder="np. sebastian koba"/></div>
     <div class="field"><label class="label">AKTUALNA LICZBA SUBSKRYBENTÓW</label><input class="input" id="nc-subs" placeholder="np. 12400" type="number"/></div>
     <div class="field"><label class="label">ŁĄCZNE WYŚWIETLENIA</label><input class="input" id="nc-views" placeholder="np. 480000" type="number"/></div>
@@ -548,6 +600,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .eng-high{background:rgba(201,245,60,.15);color:var(--lime);border:1px solid rgba(201,245,60,.3);}
 .eng-mid{background:rgba(232,184,75,.1);color:var(--gold);border:1px solid rgba(232,184,75,.3);}
 .eng-low{background:rgba(255,77,46,.1);color:var(--red);border:1px solid rgba(255,77,46,.3);}
+
+.sa-session{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:13px;margin-bottom:8px;}
+.sa-session-meta{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.sa-conv-tag{font-size:8px;padding:2px 8px;border-radius:20px;border:1px solid var(--purple);color:var(--purple);font-family:var(--fh);font-weight:700;}
 </style>
 
 <!-- SETUP OVERLAY -->
@@ -591,6 +647,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 <script>
 // API endpoint — Supabase Edge Function
 const API = 'https://qxsytudsseskvweexznh.supabase.co/functions/v1/kult-api';
+const SYNC = 'https://qxsytudsseskvweexznh.supabase.co/functions/v1/kult-sync';
 let dmStage = 'initial';
 let tone = 'Bezpośredni i odważny';
 let reelAdaptText = '';
@@ -608,6 +665,7 @@ window.onload = async () => {
   loadDmTemplates();
   loadChannels();
   loadPostMetrics();
+  loadAgentSessions();
 };
 
 async function api(path, method='GET', body=null) {
@@ -618,6 +676,14 @@ async function api(path, method='GET', body=null) {
   return r.json();
 }
 
+
+async function syncApi(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(`${SYNC}/${path}`, opts);
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
+  return r.json();
+}
 // ── BRAND ──
 async function loadBrand() {
   try {
@@ -1049,6 +1115,70 @@ function copyAgentLink() {
   notify('✦ Link skopiowany!');
 }
 
+
+// ── SCRIPT AGENT ──
+async function runScriptAgent() {
+  const topic = v('sa-topic'); if(!topic){notify('Wpisz temat!');return;}
+  const btn = document.getElementById('sa-btn');
+  const scriptEl = document.getElementById('sa-script');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> AGENT ANALIZUJE…';
+  scriptEl.className='ai-out loading'; scriptEl.textContent='Agent czyta całą Twoją bazę wiedzy…';
+  document.getElementById('sa-actions').style.display='none';
+  document.getElementById('sa-analysis-card').style.display='none';
+  try {
+    const d = await syncApi('script-agent/generate','POST',{topic, platform:v('sa-platform'), format:v('sa-format'), target_conversion:v('sa-conversion')});
+    scriptEl.className='ai-out'; scriptEl.textContent=d.script||'';
+    if (d.analysis) { document.getElementById('sa-analysis').textContent=d.analysis; document.getElementById('sa-analysis-card').style.display='block'; }
+    document.getElementById('sa-actions').style.display='flex';
+    await loadAgentSessions();
+  } catch(e) { scriptEl.className='ai-out'; scriptEl.textContent='Błąd: '+e.message; }
+  btn.disabled=false; btn.innerHTML='🤖 GENERUJ Z AGENT AI';
+}
+
+async function saveAgentScript() {
+  const text = document.getElementById('sa-script').textContent;
+  if (!text || text.includes('Wpisz temat')) return;
+  await api('knowledge','POST',{category:'🎯 Udany skrypt',content:text,source:'script_agent'});
+  notify('✦ Skrypt zapisany do bazy wiedzy!');
+}
+
+async function loadAgentSessions() {
+  try {
+    const r = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/script_agent_sessions?order=created_at.desc&limit=10', {
+      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
+    });
+    const sessions = await r.json();
+    document.getElementById('sa-count').textContent = sessions?.length||0;
+    const list = document.getElementById('sa-sessions');
+    if (!sessions?.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🤖</div>Brak sesji.</div>';return;}
+    const cl = {dm_inquiry:'DM',booking_call:'Booking',follow_profile:'Follow',product_purchase:'Zakup',link_click:'Link',save_share:'Udostępnij'};
+    list.innerHTML = sessions.map(s => `<div class="sa-session"><div class="sa-session-meta"><span style="font-family:var(--fh);font-weight:700;font-size:11px">${s.topic?.substring(0,60)||'Sesja'}</span><span class="sa-conv-tag">${cl[s.target_conversion]||s.target_conversion}</span><span style="font-size:9px;color:var(--muted)">${s.platform} · ${new Date(s.created_at).toLocaleDateString('pl-PL')}</span></div><div style="font-size:11px;color:var(--muted);line-height:1.6">${(s.final_script||'').substring(0,150)}…</div></div>`).join('');
+  } catch(e) { /* silent */ }
+}
+
+// ── YOUTUBE PREVIEW ──
+async function previewYouTube() {
+  const url = v('nc-url');
+  if (!url) return;
+  const btn = document.getElementById('nc-preview-btn');
+  const box = document.getElementById('nc-preview-box');
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  box.style.display='none';
+  try {
+    const d = await syncApi('youtube/preview','POST',{url});
+    document.getElementById('nc-name').value = d.channel_name||'';
+    document.getElementById('nc-subs').value = d.subscribers||0;
+    document.getElementById('nc-views').value = d.total_views||0;
+    box.style.display='block';
+    box.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--s2);border:1px solid rgba(201,245,60,.3);border-radius:6px;">${d.thumbnail?`<img src="${d.thumbnail}" style="width:48px;height:48px;border-radius:4px;object-fit:cover" />`:''}<div><div style="font-family:var(--fh);font-weight:700;font-size:13px;color:var(--lime)">${d.channel_name}</div><div style="font-size:10px;color:var(--muted);margin-top:3px">${formatNum(d.subscribers)} sub · ${formatNum(d.total_views)} views · ${d.video_count} wideo</div></div></div>`;
+    notify('✦ Kanał znaleziony!');
+  } catch(e) {
+    box.style.display='block';
+    box.innerHTML = `<div style="color:var(--red);font-size:11px;padding:8px">⚠ ${e.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='PODGLĄD';
+}
+
 // ── UTILS ──
 function v(id){const el=document.getElementById(id);return el?el.value.trim():'';}
 function notify(msg){const n=document.getElementById('notif');n.textContent=msg;n.classList.add('on');setTimeout(()=>n.classList.remove('on'),2800);}
@@ -1065,20 +1195,23 @@ async function addChannel() {
   const subs = parseInt(v('nc-subs'))||0, totalViews = parseInt(v('nc-views'))||0;
   if (!channel_url) { notify('Wklej URL kanału!'); return; }
   const btn = document.getElementById('nc-btn');
-  btn.disabled=true; btn.innerHTML='<span class="spin"></span>';
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> DODAJĘ…';
   try {
     const ch = await api('channels','POST',{ platform, channel_url, channel_name, subscribers: subs, total_views: totalViews });
-    // Save initial metrics snapshot
-    if (ch?.id && (subs||totalViews)) {
-      await api('metrics/channels','POST',{ channel_id: ch.id, subscribers: subs, total_views: totalViews }).catch(()=>{});
+    if (ch?.id) {
+      if (platform === 'YouTube') {
+        btn.innerHTML='<span class="spin"></span> SYNC Z YOUTUBE…';
+        const sr = await syncApi('sync/channel','POST',{ channel_id: ch.id }).catch(e=>({success:false,error:e.message}));
+        notify(sr.success ? '✦ YouTube zsynchronizowany! Dane pobrane na żywo.' : '✦ Kanał dodany (sync: ' + (sr.error||'błąd').substring(0,50) + ')');
+      } else {
+        if (subs||totalViews) await api('metrics/channels','POST',{ channel_id: ch.id, subscribers: subs, total_views: totalViews }).catch(()=>{});
+        notify('✦ Kanał dodany! (metryki aktualizuj ręcznie lub przez sync)');
+      }
     }
     closeAddChannel();
-    document.getElementById('nc-url').value='';
-    document.getElementById('nc-name').value='';
-    document.getElementById('nc-subs').value='';
-    document.getElementById('nc-views').value='';
+    ['nc-url','nc-name','nc-subs','nc-views'].forEach(id => document.getElementById(id).value='');
+    const pb = document.getElementById('nc-preview-box'); if(pb) pb.style.display='none';
     await loadChannels();
-    notify('✦ Kanał dodany!');
   } catch(e) { notify('Błąd: '+e.message); }
   btn.disabled=false; btn.textContent='DODAJ KANAŁ';
 }
@@ -1110,7 +1243,7 @@ async function loadChannels() {
             <div class="ch-metric"><div class="ch-metric-val" style="color:var(--gold)">${c.last_synced_at?new Date(c.last_synced_at).toLocaleDateString('pl-PL'):'—'}</div><div class="ch-metric-lbl">SYNC</div></div>
           </div>
           <div class="flex mt8">
-            <button class="btn btn-ghost btn-sm" onclick="openUpdateChannel('${c.id}')">AKTUALIZUJ STATS</button>
+            <button class="btn btn-ghost btn-sm" onclick="openUpdateChannel('${c.id}','${c.platform}')">SYNC / AKTUALIZUJ</button>
           </div>
         </div>
         <button class="ch-del" onclick="deleteChannel('${c.id}')">×</button>
@@ -1118,7 +1251,17 @@ async function loadChannels() {
   } catch(e) { console.error(e); }
 }
 
-function openUpdateChannel(channelId) {
+async function openUpdateChannel(channelId, platform) {
+  if (platform === 'YouTube') {
+    const autoSync = confirm('Zsynchronizować dane z YouTube API automatycznie?\n\nOK = Auto-sync (pobiera live dane)\nAnuluj = Wprowadź ręcznie');
+    if (autoSync) {
+      const r = await syncApi('sync/channel','POST',{ channel_id: channelId }).catch(e=>({success:false,error:e.message}));
+      if (r.success) notify('✦ YouTube zsynchronizowany! ' + formatNum(r.data?.subscribers||0) + ' sub, ' + (r.data?.videos_count||0) + ' wideo pobrane');
+      else notify('⚠ ' + (r.error||'Błąd sync'));
+      await loadChannels();
+      return;
+    }
+  }
   const subs = prompt('Aktualna liczba subskrybentów:');
   const views = prompt('Łączna liczba wyświetleń:');
   if (subs===null) return;
