@@ -1094,11 +1094,11 @@ async function loadChannels() {
     document.getElementById('ch-channels-count').textContent = summary.total_channels||0;
     // Populate channel dropdown for metrics
     const sel = document.getElementById('pm-channel');
-    sel.innerHTML = '<option value="">-- wybierz kanał --</option>' + (channels||[]).map((c:any)=>`<option value="${c.id}">${c.channel_name||c.channel_url} (${c.platform})</option>`).join('');
+    sel.innerHTML = '<option value="">-- wybierz kanał --</option>' + (channels||[]).map((c)=>`<option value="${c.id}">${c.channel_name||c.channel_url} (${c.platform})</option>`).join('');
     // Render channel list
     const list = document.getElementById('ch-list');
     if (!channels?.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">📡</div>Brak kanałów.</div>'; return; }
-    list.innerHTML = channels.map((c:any) => `
+    list.innerHTML = channels.map((c) => `
       <div class="ch-card">
         <div class="ch-platform-icon" style="color:${platformColor[c.platform]||'var(--muted)'}">${platformIcon[c.platform]||'📡'}</div>
         <div class="ch-info">
@@ -1118,7 +1118,7 @@ async function loadChannels() {
   } catch(e) { console.error(e); }
 }
 
-function openUpdateChannel(channelId: string) {
+function openUpdateChannel(channelId) {
   const subs = prompt('Aktualna liczba subskrybentów:');
   const views = prompt('Łączna liczba wyświetleń:');
   if (subs===null) return;
@@ -1127,7 +1127,7 @@ function openUpdateChannel(channelId: string) {
     .catch(e=>notify('Błąd: '+e.message));
 }
 
-async function deleteChannel(id: string) {
+async function deleteChannel(id) {
   if (!confirm('Usunąć kanał?')) return;
   await api('channels/'+id,'DELETE').catch(()=>{});
   await loadChannels();
@@ -1161,7 +1161,7 @@ async function loadPostMetrics() {
     document.getElementById('pm-count').textContent = (posts?.length||0)+' wpisów';
     const list = document.getElementById('pm-list');
     if (!posts?.length) { list.innerHTML='<div class="empty-state"><div class="empty-icon">📈</div>Brak danych.</div>'; return; }
-    list.innerHTML = posts.map((p:any, i:number) => {
+    list.innerHTML = posts.map((p, i) => {
       const eng = parseFloat(p.engagement_rate||0);
       const engClass = eng>=5?'eng-high':eng>=2?'eng-mid':'eng-low';
       return `<div class="pm-row">
@@ -1183,7 +1183,7 @@ async function loadPostMetrics() {
   } catch(e) { console.error(e); }
 }
 
-function formatNum(n: number): string {
+function formatNum(n) {
   if (n>=1000000) return (n/1000000).toFixed(1)+'M';
   if (n>=1000) return (n/1000).toFixed(1)+'K';
   return String(n);
