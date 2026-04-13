@@ -461,8 +461,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       <div class="card-title">🤖 GENERUJ SKRYPT</div>
       <div class="field"><label class="label">TEMAT / POMYSŁ</label><textarea class="textarea" id="sa-topic" rows="3" placeholder="np. historia jak straciłem pierwszego klienta i czego mnie nauczyła..."></textarea></div>
       <div class="ir mb12">
-        <div><label class="label">PLATFORMA</label><select class="select" id="sa-platform"><option>YouTube Shorts</option><option>YouTube</option><option>Instagram Reels</option><option>TikTok</option><option>X (Twitter)</option></select></div>
-        <div><label class="label">FORMAT</label><select class="select" id="sa-format"><option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option></select></div>
+        <div><label class="label">PLATFORMA</label><select class="select" id="sa-platform" onchange="onSAPlatformChange()"><option>YouTube Shorts</option><option>YouTube</option><option>Instagram Reels</option><option>TikTok</option><option>X (Twitter)</option></select></div>
+        <div><label class="label">FORMAT</label><select class="select" id="sa-format"><option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option><option>Thread / Wątek</option><option>Pojedynczy tweet</option></select></div>
+      </div>
+      <!-- X-specific notice -->
+      <div id="sa-x-notice" style="display:none;background:rgba(138,138,128,.08);border:1px solid rgba(138,138,128,.3);border-radius:6px;padding:12px 16px;margin-bottom:12px">
+        <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:#8a8a80;margin-bottom:6px">𝕏 TRYB PISANY — X (TWITTER)</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6">Agent wygeneruje <strong style="color:var(--text)">post tekstowy</strong> (nie skrypt mówiony). Styl zaciągany z Twoich tweetów @Testosteryk.</div>
+        <div id="sa-x-style-status" class="mt8" style="font-size:10px;color:var(--muted)">⏳ Sprawdzam czy styl jest załadowany…</div>
       </div>
       <div class="field"><label class="label">CEL KONWERSJI</label>
         <select class="select" id="sa-conversion">
@@ -1117,6 +1123,69 @@ function copyAgentLink() {
 
 
 // ── SCRIPT AGENT ──
+function onSAPlatformChange() {
+  const platform = v('sa-platform');
+  const isX = platform.toLowerCase().includes('x') || platform.toLowerCase().includes('twitter');
+  const notice = document.getElementById('sa-x-notice');
+  const formatSel = document.getElementById('sa-format');
+  if (isX) {
+    notice.style.display = 'block';
+    // Zmień opcje formatu na X-specific
+    formatSel.innerHTML = '<option>Pojedynczy tweet</option><option>Thread / Wątek</option>';
+    checkXStyleStatus();
+  } else {
+    notice.style.display = 'none';
+    formatSel.innerHTML = '<option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option>';
+  }
+}
+
+async function checkXStyleStatus() {
+  const statusEl = document.getElementById('sa-x-style-status');
+  if (!statusEl) return;
+  try {
+    const d = await syncApi('script-agent/voice-profile');
+    if (d.x_style_configured) {
+      statusEl.innerHTML = '✓ Styl @Testosteryk załadowany do bazy';
+      statusEl.style.color = 'var(--lime)';
+    } else {
+      statusEl.innerHTML = '⚠ Brak stylu — kliknij "Zaciągnij @Testosteryk" powyżej';
+      statusEl.style.color = 'var(--gold)';
+    }
+  } catch(e) {
+    statusEl.innerHTML = '— Nie można sprawdzić statusu';
+  }
+}
+
+async function fetchXStyle() {
+  const btn = document.getElementById('x-fetch-btn');
+  const status = document.getElementById('x-fetch-status');
+  if (!btn || !status) return;
+  
+  if (!confirm('Zaciągnąć tweety z @Testosteryk i zapisać styl do bazy wiedzy?\n\nWymagany: X_BEARER_TOKEN w Supabase Secrets.')) return;
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> Pobieranie…';
+  status.textContent = 'Łączę z X API…';
+  
+  try {
+    const d = await syncApi('x/fetch-tweets', 'POST', { username: 'Testosteryk', max_results: 50, save_style: true });
+    if (d.success) {
+      status.innerHTML = `✓ ${d.tweets_analyzed} tweetów · styl zapisany`;
+      status.style.color = 'var(--lime)';
+      notify('✦ Styl @Testosteryk załadowany!');
+      checkXStyleStatus();
+    } else {
+      status.innerHTML = '⚠ ' + (d.error || 'Błąd');
+      status.style.color = 'var(--red)';
+    }
+  } catch(e) {
+    status.innerHTML = '⚠ ' + e.message.substring(0, 60);
+    status.style.color = 'var(--red)';
+  }
+  btn.disabled = false;
+  btn.textContent = '⬇ ZACIĄGNIJ @Testosteryk';
+}
+
 async function runScriptAgent() {
   const topic = v('sa-topic'); if(!topic){notify('Wpisz temat!');return;}
   const btn = document.getElementById('sa-btn');
