@@ -320,18 +320,29 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <div class="ph-left"><div class="ph-title">Kalendarz Treści</div><div class="ph-sub">PLANOWANIE · MIESIĄC · WSZYSTKIE PLATFORMY</div></div>
     <button class="btn" onclick="generateCalendar()" id="cal-btn">▦ GENERUJ MIESIĄC</button>
   </div>
+  <!-- Strategia info -->
+  <div style="background:var(--s2);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:11px;color:var(--muted);line-height:1.7">
+    <strong style="color:var(--text);font-family:var(--fh);letter-spacing:1px">STRATEGIA TOFU→MOFU→BOFU</strong> &nbsp;·&nbsp;
+    Pon-Wt: ogólne tematy (TOFU) &nbsp;·&nbsp; Śr-Czw: wartość/edukacja (MOFU) &nbsp;·&nbsp; Pt-Nd: case studies + opinie (BOFU)
+    &nbsp;·&nbsp; <span style="color:var(--gold)">6–10 dzień miesiąca = nasilona sprzedaż (wypłaty)</span>
+  </div>
   <div class="g3 mb16">
     <div><label class="label">POSTY / TYDZIEŃ</label><select class="select" id="cal-ppw"><option>3</option><option selected>5</option><option>7</option></select></div>
     <div><label class="label">PLATFORMY</label><select class="select" id="cal-plat"><option>Instagram + TikTok</option><option>Instagram + TikTok + X</option><option selected>Wszystkie (IG+TT+X+YT)</option></select></div>
     <div><label class="label">FORMAT MIX</label><select class="select" id="cal-mix"><option>70% Talking Head, 30% inne</option><option selected>Mix wszystkich formatów</option><option>Głównie storytelling</option></select></div>
   </div>
-  <div class="ai-out loading" id="cal-loading" style="display:none">⟳ Generuję plan miesiąca...</div>
+  <div class="ai-out loading" id="cal-loading" style="display:none">⟳ AI generuje plan miesiąca z pełnymi tematami... (~20 sek)</div>
   <div id="cal-output" style="display:none">
-    <div class="card">
-      <div class="card-title mb16">PLAN NA MIESIĄC</div>
-      <div class="cal-header"><div class="cal-day-hdr">PON</div><div class="cal-day-hdr">WT</div><div class="cal-day-hdr">ŚR</div><div class="cal-day-hdr">CZW</div><div class="cal-day-hdr">PT</div><div class="cal-day-hdr">SOB</div><div class="cal-day-hdr">ND</div></div>
-      <div class="cal-grid" id="cal-grid"></div>
+    <div class="card mb16" style="border-top:3px solid var(--purple)">
+      <div class="card-title mb8">LEGENDA STRATEGII</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;font-size:10px;font-family:var(--fb)">
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#4f46e5;display:inline-block"></span>TOFU — Zasięg (Pon-Wt)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#0891b2;display:inline-block"></span>MOFU — Edukacja (Śr-Czw)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block"></span>BOFU — Konwersja (Pt-Nd)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#d97706;display:inline-block"></span>SPRZEDAŻ — Dzień wypłat (6-10)</span>
+      </div>
     </div>
+    <div id="cal-weeks-container"></div>
   </div>
 </div>
 
@@ -453,8 +464,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <div class="ph-left"><div class="ph-title">Script Agent</div><div class="ph-sub">TWÓJ GŁOS · TWOJA HISTORIA · CEL KONWERSJI</div></div>
   </div>
   <div style="background:var(--s2);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:16px 20px;margin-bottom:20px;">
-    <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple);margin-bottom:6px">🤖 JAK DZIAŁA SCRIPT AGENT</div>
-    <div style="font-size:11px;color:var(--muted);line-height:1.7">Agent czyta <strong style="color:var(--text)">całą Twoją bazę wiedzy</strong>, historię, przekonania i przykładowe skrypty — i pisze <strong style="color:var(--text)">w Twoim głosie</strong>. Każdy skrypt zawiera Twoje osobiste doświadczenia i jest zoptymalizowany pod konkretny cel konwersji.</div>
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px">
+        <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--purple);margin-bottom:6px">🤖 JAK DZIAŁA SCRIPT AGENT</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7">Agent czyta <strong style="color:var(--text)">całą Twoją bazę wiedzy</strong> i pisze <strong style="color:var(--text)">w Twoim głosie</strong>. Dla X (Twitter) generuje <strong style="color:var(--text)">posty pisane</strong> w stylu @Testosteryk.</div>
+      </div>
+      <div style="flex-shrink:0;text-align:center">
+        <div style="font-family:var(--fh);font-size:9px;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase">𝕏 Styl tweetów</div>
+        <button class="btn btn-ghost btn-sm" onclick="fetchXStyle()" id="x-fetch-btn" style="border:1px solid rgba(138,138,128,.5);color:var(--muted);white-space:nowrap;padding:7px 14px">⬇ Zaciągnij @Testosteryk</button>
+        <div id="x-fetch-status" style="font-size:9px;color:var(--muted);margin-top:5px"></div>
+      </div>
+    </div>
   </div>
   <div class="g2">
     <div class="card">
@@ -927,30 +947,130 @@ async function generateCalendar() {
   document.getElementById('cal-loading').style.display='block';
   document.getElementById('cal-output').style.display='none';
   try {
-    const d = await api('calendar/generate','POST',{posts_per_week:v('cal-ppw'),platforms:v('cal-plat'),format_mix:v('cal-mix')});
-    renderCalendar(d.text);
+    const d = await api('calendar/generate','POST',{
+      posts_per_week:v('cal-ppw'),
+      platforms:v('cal-plat'),
+      format_mix:v('cal-mix'),
+      strategy:'tofu_mofu_bofu'
+    });
+    renderCalendarNew(d.weeks || [], d.text || '');
     document.getElementById('cal-output').style.display='block';
-  } catch(e){notify('Błąd: '+e.message);}
+  } catch(e){notify('Błąd kalendarza: '+e.message);}
   document.getElementById('cal-loading').style.display='none';
   btn.disabled=false; btn.textContent='▦ GENERUJ MIESIĄC';
 }
-function renderCalendar(text) {
-  const grid=document.getElementById('cal-grid'); grid.innerHTML='';
-  const days=['PON','WT','ŚR','CZW','PT','SOB','ND'];
-  for(let w=1;w<=4;w++) {
-    days.forEach(day=>{
-      const cell=document.createElement('div'); cell.className='cal-cell';
-      cell.innerHTML=`<div class="cal-wk">T${w}</div>`;
-      const re=new RegExp(`T${w}-${day}[:\\s]+([^\\n]*)`, 'i');
-      const m=text.match(re);
-      if(m){
-        const c=m[1].trim();
-        const cls=c.match(/\bTT\b|tiktok/i)?'cal-post-tt':c.match(/\bYT\b|youtube/i)?'cal-post-yt':c.match(/\bX\b(?!L)/i)&&!c.match(/IG/i)?'cal-post-x':'cal-post-ig';
-        cell.innerHTML+=`<div class="cal-post ${cls}" title="${c}">${c.replace(/^(IG|TT|YT|X)\s*[·|]\s*/i,'').substring(0,22)}…</div>`;
-      }
-      grid.appendChild(cell);
+
+function getFunnelStage(dayOfWeek, dayOfMonth) {
+  // 6-10 dzień miesiąca = sprzedaż wypłatowa
+  if(dayOfMonth >= 6 && dayOfMonth <= 10) return 'sale';
+  // Piątek-Niedziela = BOFU case studies
+  if(dayOfWeek >= 4) return 'bofu';
+  // Środa-Czwartek = MOFU edukacja
+  if(dayOfWeek >= 2) return 'mofu';
+  // Pon-Wt = TOFU zasięg
+  return 'tofu';
+}
+
+function funnelLabel(stage) {
+  return {tofu:'TOFU',mofu:'MOFU',bofu:'BOFU',sale:'SPRZEDAŻ'}[stage]||'TOFU';
+}
+function funnelColor(stage) {
+  return {tofu:'#4f46e5',mofu:'#0891b2',bofu:'#16a34a',sale:'#d97706'}[stage]||'#4f46e5';
+}
+
+function renderCalendarNew(weeks, rawText) {
+  const container = document.getElementById('cal-weeks-container');
+  container.innerHTML = '';
+
+  // Parse weeks from API response if available
+  if(weeks && weeks.length > 0) {
+    weeks.forEach((week, wi) => {
+      renderWeekCard(container, week, wi+1);
     });
+  } else {
+    // Fallback: parse from raw text
+    renderCalendarFallback(container, rawText);
   }
+}
+
+function renderWeekCard(container, week, weekNum) {
+  const dayNames = ['Pon','Wt','Śr','Czw','Pt','Sob','Nd'];
+  const stageMap = ['tofu','tofu','mofu','mofu','bofu','bofu','bofu'];
+
+  const card = document.createElement('div');
+  card.className = 'card mb12';
+  card.style.borderLeft = `3px solid ${funnelColor(stageMap[0])}`;
+
+  let daysHtml = '';
+  const days = week.days || [];
+
+  days.forEach((day, di) => {
+    const stage = day.stage || stageMap[Math.min(di, 6)];
+    const color = funnelColor(stage);
+    const label = funnelLabel(stage);
+    const topic = day.topic || day.title || '';
+    const description = day.description || day.body || '';
+    const platform = day.platform || 'IG';
+    const format = day.format || 'Talking Head';
+    const isSaleDay = day.sale_day || false;
+    const topicEncoded = encodeURIComponent(topic);
+
+    daysHtml += `
+      <div style="border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:10px 12px;background:var(--s1);position:relative;overflow:hidden">
+        ${isSaleDay ? '<div style="position:absolute;top:0;right:0;background:#d97706;color:#fff;font-size:8px;font-family:var(--fh);font-weight:700;padding:2px 6px;border-radius:0 0 0 4px">💰 WYPŁATY</div>' : ''}
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+          <span style="font-family:var(--fh);font-size:10px;font-weight:700;color:#fff">${dayNames[di]}</span>
+          <span style="font-size:8px;padding:1px 6px;border-radius:10px;background:${color}22;color:${color};border:1px solid ${color}44;font-family:var(--fb);font-weight:700">${label}</span>
+          <span style="font-size:8px;color:var(--muted);margin-left:auto">${platform}</span>
+        </div>
+        <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3">${topic}</div>
+        ${description ? `<div style="font-size:10px;color:var(--muted);line-height:1.5;margin-bottom:8px">${description.substring(0,120)}${description.length>120?'…':''}</div>` : ''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:9px;color:var(--muted);font-family:var(--fb)">${format}</span>
+          <button onclick="goGenerateScript('${topicEncoded}','${platform}','${format}')" style="margin-left:auto;background:${color};color:#fff;border:none;border-radius:4px;padding:3px 8px;font-size:9px;font-family:var(--fh);font-weight:700;cursor:pointer;letter-spacing:.5px">✦ GENERUJ SKRYPT</button>
+        </div>
+      </div>`;
+  });
+
+  card.innerHTML = `
+    <div class="card-title mb12">
+      TYDZIEŃ ${weekNum}
+      <span style="font-size:9px;font-family:var(--fb);color:var(--muted);margin-left:8px;font-weight:400">${week.date_range||''}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+      ${daysHtml}
+    </div>`;
+  container.appendChild(card);
+}
+
+function renderCalendarFallback(container, text) {
+  // Simple fallback - show raw text in a card
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<div class="card-title">PLAN NA MIESIĄC</div><pre style="white-space:pre-wrap;font-size:11px;color:var(--muted);line-height:1.7">${text}</pre>`;
+  container.appendChild(card);
+}
+
+function goGenerateScript(topicEncoded, platform, format) {
+  const topic = decodeURIComponent(topicEncoded);
+  // Switch to Script Agent page
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-script-agent').classList.add('active');
+  document.querySelector('[data-page="script-agent"]')?.classList.add('active');
+  // Pre-fill the form
+  setTimeout(() => {
+    const ta = document.getElementById('sa-topic');
+    if(ta) ta.value = topic;
+    const platSel = document.getElementById('sa-platform');
+    if(platSel) {
+      for(let o of platSel.options) {
+        if(o.value === platform || o.text.includes(platform)) { platSel.value = o.value; break; }
+      }
+    }
+    if(typeof onSAPlatformChange === 'function') onSAPlatformChange();
+    notify('✦ Temat załadowany — kliknij GENERUJ Z AGENT AI');
+  }, 100);
 }
 
 // ── KNOWLEDGE BASE ──
