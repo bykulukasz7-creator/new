@@ -633,17 +633,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .sa-conv-tag{font-size:8px;padding:2px 8px;border-radius:20px;border:1px solid var(--purple);color:var(--purple);font-family:var(--fh);font-weight:700;}
 </style>
 
-<!-- X STYLE -->
+
+<!-- X STYLE PAGE -->
 <div class="page" id="page-x-style">
   <div class="ph">
-    <div class="ph-left"><div class="ph-title">Mój Styl X</div><div class="ph-sub">TWOJE WPISY · AI UCZY SIĘ TWOJEGO STYLU · TYLKO X</div></div>
+    <div class="ph-left">
+      <div class="ph-title">Mój Styl X</div>
+      <div class="ph-sub">TWOJE WPISY · AI UCZY SIĘ TWOJEGO STYLU · TYLKO X</div>
+    </div>
     <button class="btn btn-sm" onclick="analyzeXStyle()" id="xstyle-analyze-btn" style="background:var(--cyan);color:var(--bg)">🔍 SPRAWDŹ STYL</button>
   </div>
 
   <div style="background:var(--s2);border:1px solid rgba(68,217,200,.2);border-radius:8px;padding:14px 20px;margin-bottom:20px;font-size:11px;color:var(--muted);line-height:1.7">
     <strong style="color:var(--cyan);font-family:var(--fh);letter-spacing:1px">JAK TO DZIAŁA</strong> &nbsp;·&nbsp;
-    Wklejaj swoje tweety i wątki z X. Agent czyta je przed każdym generowaniem i naśladuje Twój styl. Im więcej wpisów — tym lepiej dopasowany output.
-    <span style="color:var(--lime)"> Minimum 5-10 wpisów dla najlepszych wyników.</span>
+    Wklejaj swoje tweety i wątki z X. Agent czyta je przed każdym generowaniem i naśladuje Twój styl pisania.
+    <span style="color:var(--lime)"> Min. 5–10 wpisów dla najlepszych wyników.</span>
   </div>
 
   <div class="g2 mb16">
@@ -661,13 +665,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
         <textarea class="textarea" id="xpost-content" rows="8" placeholder="Wklej swój tweet lub cały wątek..."></textarea>
       </div>
       <div class="ir mb12">
-        <div><label class="label">TEMAT (opcjonalnie)</label><input class="input" id="xpost-topic" placeholder="np. personal brand, sprzedaż..."/></div>
-        <div><label class="label">LAJKI (opcjonalnie)</label><input class="input" id="xpost-likes" placeholder="np. 234" type="number"/></div>
+        <div><label class="label">TEMAT (opcjonalnie)</label><input class="input" id="xpost-topic" placeholder="np. personal brand..."/></div>
+        <div><label class="label">LAJKI</label><input class="input" id="xpost-likes" placeholder="np. 234" type="number"/></div>
       </div>
-      <div class="field"><label class="label">NOTATKA (co zadziałało?)</label><input class="input" id="xpost-notes" placeholder="np. mocny hook, kontrowersja, liczby..."/></div>
+      <div class="field"><label class="label">NOTATKA (co zadziałało?)</label><input class="input" id="xpost-notes" placeholder="np. mocny hook, liczby..."/></div>
       <button class="btn" onclick="addXPost()" id="xpost-add-btn" style="background:var(--cyan);color:var(--bg)">DODAJ DO BAZY STYLU</button>
     </div>
-
     <div class="card">
       <div class="card-title" style="color:var(--cyan)">📊 STATUS STYLU AGENTA</div>
       <div class="g2 mb16" style="gap:10px">
@@ -675,13 +678,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
         <div class="stat cyan" style="padding:14px"><div class="stat-val" id="xstyle-threads-count">—</div><div class="stat-lbl">WĄTKÓW</div></div>
       </div>
       <div class="card-title" style="margin-bottom:8px;font-size:10px">PODGLĄD — CO WIDZI AGENT</div>
-      <div class="ai-out" id="xstyle-preview" style="min-height:120px;font-size:11px;color:var(--muted)">Kliknij "Sprawdź styl" aby zobaczyć co widzi agent przy generowaniu...</div>
+      <div class="ai-out" id="xstyle-preview" style="min-height:120px;font-size:11px;color:var(--muted)">Kliknij "Sprawdź styl" aby zobaczyć co widzi agent...</div>
     </div>
   </div>
 
   <div class="card">
     <div class="card-title">𝕏 TWOJE WPISY W BAZIE <span class="badge badge-outline" id="xposts-badge">0</span></div>
-    <div id="xposts-list"><div class="empty-state"><div class="empty-icon">𝕏</div>Brak wpisów. Dodaj swoje tweety i wątki z X — agent będzie się uczył Twojego stylu pisania.</div></div>
+    <div id="xposts-list">
+      <div class="empty-state"><div class="empty-icon">𝕏</div>Brak wpisów. Dodaj swoje tweety i wątki z X — agent uczy się Twojego stylu.</div>
+    </div>
   </div>
 </div>
 
@@ -1574,6 +1579,7 @@ function formatNum(n) {
   if (n>=1000) return (n/1000).toFixed(1)+'K';
   return String(n);
 }
+
 // ── X STYLE (Mój Styl X) ──
 let xPostType = 'tweet';
 
@@ -1582,8 +1588,8 @@ function setXPostType(type, el) {
   document.querySelectorAll('#xpost-type-chips .chip').forEach(c => c.classList.remove('on'));
   el.classList.add('on');
   const ta = document.getElementById('xpost-content');
-  ta.placeholder = type === 'thread'
-    ? 'Wklej cały wątek — każdy tweet oddzielony, np:\n\n1/ Pierwsza myśl rozwinięta w kilka zdań...\n\n2/ Druga myśl, kolejny akapit...\n\n3/ ...'
+  if (ta) ta.placeholder = type === 'thread'
+    ? 'Wklej cały wątek:\n\n1/ Pierwsza myśl rozwinięta w kilka zdań...\n\n2/ Druga myśl...\n\n3/ ...'
     : 'Wklej swój tweet (max 280 znaków)...';
 }
 
@@ -1600,10 +1606,9 @@ async function addXPost() {
       likes: parseInt(v('xpost-likes')) || 0,
       notes: v('xpost-notes') || null,
     });
-    document.getElementById('xpost-content').value = '';
-    document.getElementById('xpost-topic').value = '';
-    document.getElementById('xpost-likes').value = '';
-    document.getElementById('xpost-notes').value = '';
+    ['xpost-content','xpost-topic','xpost-likes','xpost-notes'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
     await loadXPosts();
     notify('✦ Wpis dodany! Agent zaktualizował styl.');
   } catch(e) { notify('Błąd: ' + e.message); }
@@ -1613,14 +1618,14 @@ async function addXPost() {
 async function loadXPosts() {
   try {
     const posts = await syncApi('x/posts');
-    const tweets = (posts || []).filter(p => p.post_type === 'tweet');
-    const threads = (posts || []).filter(p => p.post_type === 'thread');
+    const tweets = (posts||[]).filter(p => p.post_type === 'tweet');
+    const threads = (posts||[]).filter(p => p.post_type === 'thread');
     const tc = document.getElementById('xstyle-tweets-count');
     const thc = document.getElementById('xstyle-threads-count');
     const badge = document.getElementById('xposts-badge');
     if (tc) tc.textContent = tweets.length;
     if (thc) thc.textContent = threads.length;
-    if (badge) badge.textContent = (posts || []).length;
+    if (badge) badge.textContent = (posts||[]).length;
     const list = document.getElementById('xposts-list');
     if (!list) return;
     if (!posts || !posts.length) {
@@ -1632,16 +1637,16 @@ async function loadXPosts() {
         <div class="kb-icon">${p.post_type === 'thread' ? '🧵' : '𝕏'}</div>
         <div style="flex:1">
           <div class="kb-cat">${p.post_type === 'thread' ? 'WĄTEK' : 'TWEET'}${p.topic ? ' · ' + p.topic : ''}${p.likes ? ' · ❤️ ' + p.likes : ''} · ${new Date(p.created_at).toLocaleDateString('pl-PL')}</div>
-          <div class="kb-text">${p.content.substring(0, 220)}${p.content.length > 220 ? '…' : ''}</div>
+          <div class="kb-text">${p.content.substring(0,220)}${p.content.length>220?'…':''}</div>
           ${p.notes ? `<div style="font-size:10px;color:var(--cyan);margin-top:4px">💡 ${p.notes}</div>` : ''}
         </div>
         <button class="kb-del" onclick="deleteXPost('${p.id}')">×</button>
       </div>`).join('');
-  } catch(e) { console.error('loadXPosts error:', e); }
+  } catch(e) { console.error('loadXPosts:', e); }
 }
 
 async function deleteXPost(id) {
-  await syncApi('x/posts/' + id, 'DELETE').catch(() => {});
+  await syncApi('x/posts/' + id, 'DELETE').catch(()=>{});
   await loadXPosts();
   notify('Wpis usunięty.');
 }
@@ -1656,10 +1661,12 @@ async function analyzeXStyle() {
       preview.textContent = d.style_preview;
       preview.style.color = 'var(--text)';
     } else {
-      preview.textContent = 'Brak wpisów — dodaj swoje tweety i wątki żeby agent mógł się uczyć stylu.';
+      preview.textContent = 'Brak wpisów — dodaj tweety i wątki żeby agent mógł się uczyć.';
       preview.style.color = 'var(--muted)';
     }
   } catch(e) { notify('Błąd: ' + e.message); }
   btn.disabled = false; btn.textContent = '🔍 SPRAWDŹ STYL';
 }
 </script>
+</body>
+</html>
