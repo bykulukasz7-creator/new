@@ -146,6 +146,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .agent-link-box{background:var(--s2);border:1px solid rgba(201,245,60,.3);border-radius:8px;padding:16px 20px;margin-top:20px;}
 .agent-link-label{font-size:9px;letter-spacing:2px;color:var(--lime);font-family:var(--fh);font-weight:700;margin-bottom:8px;}
 .agent-link-url{font-size:11px;color:var(--text);word-break:break-all;}
+
+/* ── BRAND SWITCHER ── */
+.brand-switcher-overlay{position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(10px);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
+.brand-switcher-card{background:var(--s1);border:1px solid var(--border2);border-radius:14px;padding:36px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;}
+.bsc-title{font-family:var(--fh);font-size:24px;font-weight:800;color:var(--lime);margin-bottom:4px;letter-spacing:2px;}
+.bsc-sub{font-size:11px;color:var(--muted);margin-bottom:24px;line-height:1.7;}
+.brand-card{background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .12s;}
+.brand-card:hover{border-color:var(--lime);background:rgba(201,245,60,.05);}
+.brand-card.selected{border-color:var(--lime);background:rgba(201,245,60,.08);}
+.brand-card-av{width:38px;height:38px;border-radius:50%;background:var(--lime);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:14px;color:var(--bg);flex-shrink:0;}
+.brand-card-name{font-family:var(--fh);font-weight:700;font-size:13px;color:var(--text);}
+.brand-card-niche{font-size:10px;color:var(--muted);margin-top:1px;}
+.brand-card-check{margin-left:auto;color:var(--lime);font-size:18px;opacity:0;transition:opacity .12s;}
+.brand-card.selected .brand-card-check{opacity:1;}
+.brand-new-btn{width:100%;padding:13px;border:1px dashed var(--border2);border-radius:8px;background:transparent;color:var(--muted);font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:all .12s;margin-top:4px;}
+.brand-new-btn:hover{border-color:var(--lime);color:var(--lime);}
+.brand-active-bar{background:rgba(201,245,60,.06);border-bottom:1px solid rgba(201,245,60,.12);padding:5px 32px;font-size:9px;letter-spacing:2px;color:var(--lime);font-family:var(--fh);font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer;transition:background .12s;}
+.brand-active-bar:hover{background:rgba(201,245,60,.1);}
 </style>
 </head>
 <body>
@@ -189,6 +207,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
   </div>
 </aside>
 <main class="main">
+
+<div class="brand-active-bar" id="brand-active-bar" onclick="openBrandSwitcher()" style="display:none;position:sticky;top:0;z-index:10;">
+  <span>◈</span>
+  <span id="bar-brand-name">MARKA</span>
+  <span style="opacity:.4">·</span>
+  <span style="opacity:.5;font-weight:400">AKTYWNA</span>
+  <span style="margin-left:auto;opacity:.5;font-size:8px">ZMIEŃ ↗</span>
+</div>
+
 
 <!-- DASHBOARD -->
 <div class="page active" id="page-dashboard">
@@ -690,6 +717,22 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
   </div>
 </div>
 
+
+<!-- BRAND SWITCHER OVERLAY -->
+<div class="brand-switcher-overlay" id="brand-switcher-overlay" style="display:none">
+  <div class="brand-switcher-card">
+    <div class="bsc-title">WYBIERZ MARKĘ</div>
+    <div class="bsc-sub">Każda marka ma osobną bazę wiedzy, skrypty, styl X i ustawienia.<br>Dane nie mieszają się między markami.</div>
+    <div id="brand-switcher-list">
+      <div class="empty-state" style="padding:16px 0"><div class="empty-icon" style="font-size:20px">◎</div>Ładowanie marek...</div>
+    </div>
+    <button class="brand-new-btn" onclick="createNewBrand()">+ UTWÓRZ NOWĄ MARKĘ</button>
+    <div class="flex mt16" id="bsc-cancel-row">
+      <button class="btn btn-ghost btn-sm" onclick="closeBrandSwitcher()">ANULUJ</button>
+    </div>
+  </div>
+</div>
+
 <!-- SETUP OVERLAY -->
 <div class="overlay" id="setup-overlay">
   <div class="ov-card">
@@ -741,16 +784,7 @@ let currentStep = 1;
 // ── INIT ──
 window.onload = async () => {
   document.getElementById('agent-url').textContent = window.location.origin + '/agent.html';
-  await loadBrand();
-  await loadStats();
-  await loadRecentScripts();
-  loadKb();
-  loadCompetitors();
-  loadDmTemplates();
-  loadChannels();
-  loadPostMetrics();
-  loadAgentSessions();
-  loadXPosts();
+  await initBrands();
 };
 
 async function api(path, method='GET', body=null) {
@@ -800,19 +834,26 @@ async function loadBrand() {
 
 async function saveBrand() {
   const btn = document.getElementById('save-brand-btn');
+  const name = v('s-name');
+  if (!name) { notify('Wpisz nazwę marki!'); return; }
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> ZAPISUJĘ...';
   try {
-    await api('brand', 'POST', {
-      name: v('s-name'), niche: v('s-niche'), offer: v('s-offer'), target: v('s-target'),
+    const payload = {
+      name, niche: v('s-niche'), offer: v('s-offer'), target: v('s-target'),
       origin: v('s-origin'), beliefs: v('s-beliefs'), contrarian_take: v('s-take'),
       tone, main_platform: v('s-mainplat')||'Instagram',
       platforms: ['Instagram','TikTok','X','YouTube'],
       goals: v('s-goals'), results: v('s-results'),
       followers: parseInt(v('s-fol'))||0, avg_views: parseInt(v('s-views'))||0
-    });
+    };
+    if (activeBrandId) payload.id = activeBrandId;
+    const saved = await api('brand', 'POST', payload);
     document.getElementById('setup-overlay').style.display = 'none';
-    await loadBrand();
-    notify('✦ Marka zapisana w Supabase!');
+    const brands = await api('brands').catch(() => []);
+    allBrands = brands || [];
+    const newId = (Array.isArray(saved) ? saved[0] : saved)?.id || activeBrandId || allBrands[0]?.id;
+    if (newId) await setActiveBrand(newId, true);
+    notify('✦ Marka ' + name + ' zapisana!');
   } catch(e) { notify('Błąd: ' + e.message); }
   btn.disabled = false; btn.textContent = '✦ ZAPISZ I ZACZNIJ';
 }
@@ -1667,6 +1708,147 @@ async function analyzeXStyle() {
   } catch(e) { notify('Błąd: ' + e.message); }
   btn.disabled = false; btn.textContent = '🔍 SPRAWDŹ STYL';
 }
+
+// ══════════════════════════════════════════
+// BRAND SYSTEM — profile marek
+// ══════════════════════════════════════════
+let activeBrandId = null;
+let allBrands = [];
+
+async function initBrands() {
+  try {
+    const brands = await api('brands').catch(() => []);
+    allBrands = brands || [];
+
+    // Restore last used brand
+    const saved = localStorage.getItem('kult_active_brand');
+    if (saved && allBrands.find(b => b.id === saved)) {
+      activeBrandId = saved;
+    } else if (allBrands.length > 0) {
+      activeBrandId = allBrands[0].id;
+    }
+
+    if (allBrands.length === 0) {
+      // Brak marek — pokaż setup
+      openSetup();
+      return;
+    }
+
+    if (activeBrandId) {
+      await setActiveBrand(activeBrandId, false);
+    } else {
+      openBrandSwitcher(true);
+    }
+  } catch(e) {
+    console.error('initBrands:', e);
+    // Fallback — stary tryb bez multi-brand
+    await loadBrand();
+    await loadStats();
+    await loadRecentScripts();
+    loadKb(); loadCompetitors(); loadDmTemplates();
+    loadChannels(); loadPostMetrics(); loadAgentSessions(); loadXPosts();
+  }
+}
+
+async function setActiveBrand(brandId, showNotif = true) {
+  activeBrandId = brandId;
+  localStorage.setItem('kult_active_brand', brandId);
+  const brand = allBrands.find(b => b.id === brandId);
+
+  if (brand) {
+    // Sidebar
+    document.getElementById('sAvatar').textContent = brand.name.charAt(0).toUpperCase();
+    document.getElementById('sName').textContent = brand.name;
+    document.getElementById('sNiche').textContent = (brand.niche||'').substring(0,26)+'…';
+    // Active bar
+    const bar = document.getElementById('brand-active-bar');
+    if (bar) {
+      document.getElementById('bar-brand-name').textContent = brand.name.toUpperCase();
+      bar.style.display = 'flex';
+    }
+    // Dashboard stats
+    document.getElementById('d-views').textContent = brand.avg_views ? Number(brand.avg_views).toLocaleString('pl') : '—';
+    document.getElementById('d-followers').textContent = brand.followers ? Number(brand.followers).toLocaleString('pl') : '—';
+    document.getElementById('d-platform').textContent = brand.main_platform || '—';
+    document.getElementById('db-status').textContent = '✓ Marka: ' + brand.name + ' · Supabase aktywne';
+    document.getElementById('db-status').style.color = 'var(--lime)';
+    // Pre-fill setup form
+    ['name','niche','offer','target','origin','beliefs','goals','results'].forEach(k => {
+      const el = document.getElementById('s-'+k);
+      if (el) el.value = brand[k] || '';
+    });
+    const take = document.getElementById('s-take');
+    if (take) take.value = brand.contrarian_take || '';
+    const fol = document.getElementById('s-fol');
+    if (fol) fol.value = brand.followers || '';
+    const views = document.getElementById('s-views');
+    if (views) views.value = brand.avg_views || '';
+    if (showNotif) notify('✦ Marka: ' + brand.name);
+  }
+
+  closeBrandSwitcher();
+
+  // Reload all data for this brand
+  const bq = '?brand_id=' + brandId;
+  await loadStats();
+  await loadRecentScripts();
+  loadKb();
+  loadXPosts();
+  loadCompetitors();
+  loadDmTemplates();
+  loadChannels();
+  loadPostMetrics();
+  loadAgentSessions();
+}
+
+function openBrandSwitcher(force = false) {
+  const overlay = document.getElementById('brand-switcher-overlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  const cancelRow = document.getElementById('bsc-cancel-row');
+  if (cancelRow) cancelRow.style.display = force ? 'none' : 'flex';
+  renderBrandList();
+}
+
+function closeBrandSwitcher() {
+  const overlay = document.getElementById('brand-switcher-overlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function renderBrandList() {
+  const list = document.getElementById('brand-switcher-list');
+  if (!list) return;
+  if (!allBrands.length) {
+    list.innerHTML = '<div class="empty-state" style="padding:16px 0"><div class="empty-icon" style="font-size:20px">◎</div>Brak marek. Utwórz pierwszą poniżej.</div>';
+    return;
+  }
+  list.innerHTML = allBrands.map(b => `
+    <div class="brand-card ${b.id === activeBrandId ? 'selected' : ''}" onclick="setActiveBrand('${b.id}')">
+      <div class="brand-card-av" style="background:var(--lime)">${b.name.charAt(0).toUpperCase()}</div>
+      <div style="flex:1">
+        <div class="brand-card-name">${b.name}</div>
+        <div class="brand-card-niche">${b.niche || 'Brak niszy'}</div>
+      </div>
+      <div class="brand-card-check">✓</div>
+    </div>`).join('');
+}
+
+async function createNewBrand() {
+  // Resetuj formularz setup
+  ['s-name','s-niche','s-offer','s-target','s-origin','s-beliefs','s-take','s-goals','s-results','s-fol','s-views'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  activeBrandId = null;
+  closeBrandSwitcher();
+  currentStep = 1;
+  document.querySelectorAll('[id^="step-"]').forEach(el => el.style.display = 'none');
+  const s1 = document.getElementById('step-1');
+  if (s1) s1.style.display = 'block';
+  document.querySelectorAll('.step-dot').forEach((d,i) => d.classList.toggle('done', i === 0));
+  document.getElementById('setup-overlay').style.display = 'flex';
+}
+
 </script>
 </body>
 </html>
