@@ -1635,7 +1635,8 @@ async function saveAgentScript() {
 
 async function loadAgentSessions() {
   try {
-    const r = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/script_agent_sessions?order=created_at.desc&limit=10', {
+    const bf = activeBrandId ? `&brand_id=eq.${activeBrandId}` : '';
+    const r = await fetch(`https://qxsytudsseskvweexznh.supabase.co/rest/v1/script_agent_sessions?order=created_at.desc&limit=20${bf}`, {
       headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
     });
     const sessions = await r.json();
@@ -1643,8 +1644,47 @@ async function loadAgentSessions() {
     const list = document.getElementById('sa-sessions');
     if (!sessions?.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🤖</div>Brak sesji.</div>';return;}
     const cl = {dm_inquiry:'DM',booking_call:'Booking',follow_profile:'Follow',product_purchase:'Zakup',link_click:'Link',save_share:'Udostępnij'};
-    list.innerHTML = sessions.map(s => `<div class="sa-session"><div class="sa-session-meta"><span style="font-family:var(--fh);font-weight:700;font-size:11px">${s.topic?.substring(0,60)||'Sesja'}</span><span class="sa-conv-tag">${cl[s.target_conversion]||s.target_conversion}</span><span style="font-size:9px;color:var(--muted)">${s.platform} · ${new Date(s.created_at).toLocaleDateString('pl-PL')}</span></div><div style="font-size:11px;color:var(--muted);line-height:1.6">${(s.final_script||'').substring(0,150)}…</div></div>`).join('');
-  } catch(e) { /* silent */ }
+    list.innerHTML = sessions.map((s, i) => {
+      const scriptId = 'sa-script-' + i;
+      const fullScript = (s.final_script||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const preview = (s.final_script||'').substring(0,140);
+      const hasMore = (s.final_script||'').length > 140;
+      return `<div class="sa-session">
+        <div class="sa-session-meta">
+          <span style="font-family:var(--fh);font-weight:700;font-size:11px">${(s.topic||'Sesja').substring(0,60)}</span>
+          <span class="sa-conv-tag">${cl[s.target_conversion]||s.target_conversion||'—'}</span>
+          <span style="font-size:9px;color:var(--muted)">${s.platform||''} · ${new Date(s.created_at).toLocaleDateString('pl-PL')}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px">
+          <span id="${scriptId}-preview">${preview}${hasMore?'…':''}</span>
+          <div id="${scriptId}-full" style="display:none;white-space:pre-wrap;color:var(--text)">${fullScript}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          ${hasMore ? `<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="toggleSession('${scriptId}',this)">ROZWIŃ ↓</button>` : ''}
+          <button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyText(${JSON.stringify(s.final_script||'')})">KOPIUJ</button>
+          <button class="btn btn-sm" style="font-size:9px;background:var(--purple);color:#fff" onclick="loadSessionToAgent(${JSON.stringify(s.final_script||'')})">ZAŁADUJ DO AGENTA</button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error('loadAgentSessions:', e); }
+}
+
+function toggleSession(id, btn) {
+  const preview = document.getElementById(id+'-preview');
+  const full = document.getElementById(id+'-full');
+  if (!preview || !full) return;
+  const isExpanded = full.style.display !== 'none';
+  preview.style.display = isExpanded ? 'inline' : 'none';
+  full.style.display = isExpanded ? 'none' : 'block';
+  btn.textContent = isExpanded ? 'ROZWIŃ ↓' : 'ZWIŃ ↑';
+}
+
+function loadSessionToAgent(script) {
+  const el = document.getElementById('sa-script');
+  if (el) { el.className = 'ai-out'; el.textContent = script; }
+  document.getElementById('sa-actions').style.display = 'flex';
+  navTo('script-agent');
+  notify('✦ Skrypt załadowany do agenta!');
 }
 
 // ── YOUTUBE PREVIEW ──
@@ -2089,8 +2129,8 @@ async function initCalendarV2() {
 
 async function loadCalendarMonths() {
   try {
-    const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
-    const months = await api(`calendar-days/months${bq}`).catch(()=>[]);
+    const bfParam = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+    const months = await api(`calendar-days/months${bfParam}`).catch(()=>[]);
     const sel = document.getElementById('cal2-month-select');
     if (!sel) return;
     const current = getCurrentYearMonth();
@@ -2113,7 +2153,8 @@ async function loadCalendarMonth(month) {
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:11px">Ładuję...</div>';
   
   const bq = activeBrandId ? `&brand_id=${activeBrandId}` : '';
-  const days = await api(`calendar-days?month=${month}${bq}`).catch(()=>[]);
+  const bfParam2 = activeBrandId ? `&brand_id=${activeBrandId}` : '';
+  const days = await api(`calendar-days?month=${month}${bfParam2}`).catch(()=>[]);
   cal2Days = {};
   (days||[]).forEach(d => { cal2Days[d.date] = d; });
   renderCalendarGrid(month);
