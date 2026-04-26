@@ -1866,6 +1866,15 @@ function formatNum(n) {
   return String(n);
 }
 
+// ── DATE UTILS ──
+function localDateStr(d) {
+  // Returns YYYY-MM-DD in local timezone (not UTC)
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return y + '-' + m + '-' + day;
+}
+
 // ── X STYLE (Mój Styl X) ──
 let xPostType = 'tweet';
 
@@ -2529,27 +2538,29 @@ async function deleteClient(id) {
 let relWeekStart = null;
 
 function initRelations() {
-  // Set to last Friday
+  // Set to last Friday (using local date, not UTC)
   const now = new Date();
-  const dow = now.getDay();
-  const daysToFri = dow >= 5 ? dow - 5 : dow + 2;
+  const dow = now.getDay(); // 0=Sun,1=Mon,...,5=Fri,6=Sat
+  // Days back to Friday: Sun=2, Mon=3, Tue=4, Wed=5, Thu=6, Fri=0, Sat=1
+  const daysBack = [2,3,4,5,6,0,1][dow];
   const fri = new Date(now);
-  fri.setDate(now.getDate() - daysToFri);
+  fri.setDate(now.getDate() - daysBack);
   relWeekStart = fri;
-  const friStr = fri.toISOString().split('T')[0];
+  const friStr = localDateStr(fri);
   const inp = document.getElementById('rel-week-start');
-  if (inp) { inp.value = friStr; updateRelationWeek(); }
+  if (inp) inp.value = friStr;
+  updateRelationWeek();
   loadRelationWeek();
 }
 
 function updateRelationWeek() {
   const inp = document.getElementById('rel-week-start');
   if (!inp || !inp.value) return;
-  relWeekStart = new Date(inp.value + 'T00:00:00');
+  relWeekStart = new Date(inp.value + 'T12:00:00'); // noon to avoid UTC shift
   const sun = new Date(relWeekStart);
   sun.setDate(relWeekStart.getDate() + 2);
   const endLabel = document.getElementById('rel-week-end-label');
-  if (endLabel) endLabel.textContent = sun.toLocaleDateString('pl-PL');
+  if (endLabel) endLabel.textContent = localDateStr(sun);
   loadRelationWeek();
 }
 
@@ -2558,7 +2569,7 @@ function prevRelWeek() {
   relWeekStart = new Date(relWeekStart);
   relWeekStart.setDate(relWeekStart.getDate() - 7);
   const inp = document.getElementById('rel-week-start');
-  if (inp) inp.value = relWeekStart.toISOString().split('T')[0];
+  if (inp) inp.value = localDateStr(relWeekStart);
   updateRelationWeek();
 }
 function nextRelWeek() {
@@ -2566,7 +2577,7 @@ function nextRelWeek() {
   relWeekStart = new Date(relWeekStart);
   relWeekStart.setDate(relWeekStart.getDate() + 7);
   const inp = document.getElementById('rel-week-start');
-  if (inp) inp.value = relWeekStart.toISOString().split('T')[0];
+  if (inp) inp.value = localDateStr(relWeekStart);
   updateRelationWeek();
 }
 
@@ -2576,9 +2587,9 @@ async function loadRelationWeek() {
   const sat = new Date(fri); sat.setDate(fri.getDate()+1);
   const sun = new Date(fri); sun.setDate(fri.getDate()+2);
   const days = [
-    { date: fri.toISOString().split('T')[0], type: 'soft_sell', label: 'PIĄTEK — SOFT SELL', color: '#e11d48' },
-    { date: sat.toISOString().split('T')[0], type: 'value', label: 'SOBOTA — VALUE', color: '#7c3aed' },
-    { date: sun.toISOString().split('T')[0], type: 'social_proof', label: 'NIEDZIELA — SOCIAL PROOF', color: '#be185d' },
+    { date: localDateStr(fri), type: 'soft_sell', label: 'PIĄTEK — SOFT SELL', color: '#e11d48' },
+    { date: localDateStr(sat), type: 'value', label: 'SOBOTA — VALUE', color: '#7c3aed' },
+    { date: localDateStr(sun), type: 'social_proof', label: 'NIEDZIELA — SOCIAL PROOF', color: '#be185d' },
   ];
   const bq = activeBrandId ? '?brand_id=' + activeBrandId : '';
   const month = fri.toISOString().substring(0,7);
@@ -2659,7 +2670,7 @@ async function generateWeekRelations() {
   const types = ['soft_sell','value','social_proof'];
   for (let i = 0; i < 3; i++) {
     const d = new Date(fri); d.setDate(fri.getDate() + i);
-    await generateSingleRelation(d.toISOString().split('T')[0], types[i]);
+    await generateSingleRelation(localDateStr(d), types[i]);
   }
   btn.disabled = false; btn.textContent = '📱 GENERUJ TYDZIEŃ';
 }
