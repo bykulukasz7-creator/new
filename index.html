@@ -2597,12 +2597,15 @@ async function loadRelationWeek() {
     return '<div class="rel-day-card">' +
       '<div class="rel-day-header" style="color:' + d.color + '">' + d.label + '</div>' +
       '<div style="font-size:10px;color:var(--muted);margin-bottom:12px">' + d.date + '</div>' +
-      (hasScript ? 
-        '<div style="font-size:10px;font-family:var(--fh);color:var(--text);margin-bottom:6px">HOOK: ' + (plan.hook||'') + '</div>' +
-        '<div id="' + scriptId + '" style="font-size:10px;color:var(--muted);max-height:200px;overflow-y:auto;margin-bottom:12px;white-space:pre-wrap">' + (plan.script||'').substring(0,400) + ((plan.script||'').length>400?'…':'') + '</div>'
-        : '<div style="font-size:11px;color:var(--muted2);margin-bottom:12px">Brak planu na ten dzień.</div>') +
+      (hasScript ?
+        '<div style="font-size:10px;font-family:var(--fh);font-weight:700;color:var(--text);margin-bottom:4px">TOPIC: ' + (plan.topic||'') + '</div>' +
+        '<div style="font-size:10px;font-family:var(--fh);color:var(--lime);margin-bottom:8px">HOOK: ' + (plan.hook||'') + '</div>' +
+        '<div style="border-left:2px solid ' + d.color + ';padding:10px 14px;background:var(--s2);border-radius:0 6px 6px 0;margin-bottom:12px">' +
+          '<div id="' + scriptId + '" style="font-size:11px;color:var(--text);line-height:1.75;white-space:pre-wrap;max-height:300px;overflow-y:auto">' + (plan.script||'') + '</div>' +
+        '</div>'
+        : '<div style="font-size:11px;color:var(--muted2);font-style:italic;margin-bottom:12px;padding:12px;background:var(--s2);border-radius:6px">Brak wygenerowanej relacji — kliknij GENERUJ.</div>') +
       '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
-        '<button class="btn btn-sm" style="background:' + d.color + ';font-size:9px" onclick="generateSingleRelation(\'' + d.date + '\',\'' + d.type + '\')">' + 'GENERUJ RELACJĘ</button>' +
+        '<button class="btn btn-sm" style="background:' + d.color + ';font-size:9px" onclick="generateSingleRelation(\'' + d.date + '\',\'' + d.type + '\')">' + (hasScript ? '🔄 REGENERUJ' : '✦ GENERUJ RELACJĘ') + '</button>' +
         (hasScript ? '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyRelScript(\'' + scriptId + '\')">' + 'KOPIUJ</button>' : '') +
       '</div>' +
     '</div>';
@@ -2620,22 +2623,32 @@ async function generateSingleRelation(date, relationType) {
   const clients = await api(`clients${bq}`).catch(()=>[]);
   let clientId = null;
   if (relationType === 'social_proof' && clients && clients.length) {
-    // Pick least used
     const sorted = [...clients].sort((a,b)=>(a.used_count||0)-(b.used_count||0));
     clientId = sorted[0].id;
   }
   const grid = document.getElementById('rel-days-grid');
   const btns = grid?.querySelectorAll('button');
-  btns?.forEach(b => b.disabled = true);
+  btns?.forEach(b => { b.disabled = true; });
   notify('⟳ Agent generuje relację...');
   try {
     const payload = { date, relation_type: relationType };
     if (clientId) payload.client_id = clientId;
     if (activeBrandId) payload.brand_id = activeBrandId;
-    await api('relations/generate', 'POST', payload);
+    const result = await api('relations/generate', 'POST', payload);
+    // Ensure relWeekStart is set to the week containing this date
+    if (!relWeekStart) {
+      const d = new Date(date + 'T00:00:00');
+      const dow = d.getDay();
+      const diff = dow === 5 ? 0 : dow === 6 ? -1 : dow === 0 ? -2 : -(dow + 2);
+      relWeekStart = new Date(d);
+      relWeekStart.setDate(d.getDate() + diff);
+    }
     await loadRelationWeek();
     notify('✦ Relacja wygenerowana!');
-  } catch(e) { notify('Błąd: ' + e.message); btns?.forEach(b => b.disabled = false); }
+  } catch(e) {
+    notify('Błąd: ' + e.message);
+    btns?.forEach(b => { b.disabled = false; });
+  }
 }
 
 async function generateWeekRelations() {
