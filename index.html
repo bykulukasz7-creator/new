@@ -744,6 +744,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
           <select class="select" id="cal2-client-select" style="margin-bottom:8px"><option value="">-- wybierz klienta (opcjonalnie) --</option></select>
           <button class="btn btn-sm" style="background:var(--red);color:#fff" onclick="generateRelation()" id="cal2-rel-btn">GENERUJ RELACJĘ</button>
         </div>
+        <div class="field" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+          <label class="label" style="color:var(--gold)">🏆 GENERUJ Z SUKCESU KLIENTA</label>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Wygeneruj post oparty na historii sukcesu klienta — do użycia dowolnego dnia.</div>
+          <select class="select" id="cal2-success-client-select" style="margin-bottom:8px"><option value="">-- wybierz klienta --</option></select>
+          <div class="field">
+            <label class="label">FORMAT POSTA</label>
+            <select class="select" id="cal2-success-format">
+              <option value="case_study">Case Study (zanim → po)</option>
+              <option value="transformation">Transformacja (storytelling)</option>
+              <option value="social_proof">Social Proof (wyniki + CTA)</option>
+              <option value="testimonial">Testimonial (cytat klienta)</option>
+            </select>
+          </div>
+          <button class="btn btn-sm" style="background:var(--gold);color:var(--bg)" onclick="generateFromClientSuccess()" id="cal2-success-btn">🏆 GENERUJ Z KLIENTA</button>
+        </div>
       </div>
       <div>
         <div class="label" style="margin-bottom:8px">WYGENEROWANY SKRYPT / NOTATKI</div>
@@ -771,8 +786,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       <div class="card-title" style="color:var(--gold)">🏆 DODAJ SUKCES KLIENTA</div>
       <div class="field"><label class="label">IMIĘ / PSEUDONIM KLIENTA</label><input class="input" id="cl-name" placeholder="np. Mateusz K., @mateuszk..."/></div>
       <div class="field"><label class="label">NISZA / KIM JEST</label><input class="input" id="cl-niche" placeholder="np. trener personalny, 35 lat, Warszawa"/></div>
-      <div class="field"><label class="label">EFEKT / WYNIK (konkretny)</label><textarea class="textarea" id="cl-result" rows="2" placeholder="np. z 0 do 12k followers w 4 miesiące, 3 nowych klientów/mies."/></div>
-      <div class="field"><label class="label">TRANSFORMACJA (zanim → po)</label><textarea class="textarea" id="cl-transformation" rows="2" placeholder="np. Przed: brak obecności online, 0 leadów. Po: 3-4 leady/tydzień z social media"/></div>
+      <div class="field"><label class="label">EFEKT / WYNIK (konkretny)</label><textarea class="textarea" id="cl-result" rows="2" placeholder="np. z 0 do 12k followers w 4 miesiące, 3 nowych klientów/mies."></textarea></div>
+      <div class="field"><label class="label">TRANSFORMACJA (zanim → po)</label><textarea class="textarea" id="cl-transformation" rows="2" placeholder="np. Przed: brak obecności online, 0 leadów. Po: 3-4 leady/tydzień z social media"></textarea></div>
       <div class="ir mb12">
         <div><label class="label">TIMEFRAME</label><input class="input" id="cl-timeframe" placeholder="np. 3 miesiące"/></div>
         <div><label class="label">METRYKI</label><input class="input" id="cl-metrics" placeholder="np. +12k sub, 4.2% ER"/></div>
@@ -2181,19 +2196,92 @@ function selectDay(dateStr) {
   const relSection = document.getElementById('cal2-relation-section');
   if (relSection) {
     relSection.style.display = isRelation ? 'block' : 'none';
-    if (isRelation) loadClientSelectForRelation();
   }
+  // Always load client selects (success generator available every day)
+  loadClientSelectForRelation();
   document.getElementById('cal2-detail').dataset.date = dateStr;
   document.getElementById('cal2-detail').dataset.relationType = day.relation_type || (dow===5?'soft_sell':dow===6?'value':'social_proof');
 }
 
 async function loadClientSelectForRelation() {
-  const sel = document.getElementById('cal2-client-select');
-  if (!sel) return;
   const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
   const clients = await api(`clients${bq}`).catch(()=>[]);
-  sel.innerHTML = '<option value="">-- wybierz klienta (opcjonalnie) --</option>' +
-    (clients||[]).map(c => `<option value="${c.id}">${c.client_name}${c.result?' — '+c.result.substring(0,40):''}</option>`).join('');
+  const options = '<option value="">-- wybierz klienta (opcjonalnie) --</option>' +
+    (clients||[]).map(cl => `<option value="${cl.id}">${cl.client_name}${cl.result?' — '+cl.result.substring(0,40):''}</option>`).join('');
+  const sel = document.getElementById('cal2-client-select');
+  if (sel) sel.innerHTML = options;
+  // Also populate the success client select (always shown)
+  const sel2 = document.getElementById('cal2-success-client-select');
+  if (sel2) {
+    sel2.innerHTML = '<option value="">-- wybierz klienta --</option>' +
+      (clients||[]).map(cl => `<option value="${cl.id}">${cl.client_name}${cl.result?' — '+cl.result.substring(0,40):''}</option>`).join('');
+  }
+}
+
+async function generateFromClientSuccess() {
+  const clientId = document.getElementById('cal2-success-client-select')?.value;
+  const format = document.getElementById('cal2-success-format')?.value || 'case_study';
+  const dateStr = document.getElementById('cal2-detail')?.dataset.date;
+  if (!clientId) { notify('Wybierz klienta!'); return; }
+
+  const btn = document.getElementById('cal2-success-btn');
+  const scriptEl = document.getElementById('cal2-script');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> GENERUJĘ...';
+  scriptEl.className = 'ai-out loading';
+  scriptEl.textContent = 'Agent generuje post oparty na sukcesie klienta...';
+
+  try {
+    const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+    const clients = await api(`clients${bq}`).catch(()=>[]);
+    const client = (clients||[]).find(cl => cl.id === clientId);
+    if (!client) throw new Error('Nie znaleziono klienta');
+
+    // Mark client as used
+    await api(`clients/${clientId}/use`, 'POST', {}).catch(()=>{});
+
+    const formatLabels = {
+      case_study: 'CASE STUDY — pokaż transformację zanim/po, konkretne liczby, co zmieniło się w życiu klienta',
+      transformation: 'STORYTELLING TRANSFORMACJI — opowiedz historię klienta jak bajkę: skąd przyszedł, co przeżył, gdzie jest teraz',
+      social_proof: 'SOCIAL PROOF — skup się na wynikach i metrykach, zakończ mocnym CTA do działania',
+      testimonial: 'TESTIMONIAL POST — zbuduj post wokół cytatu klienta, rozwiń kontekst, dodaj CTA'
+    };
+    const formatInstr = formatLabels[format] || formatLabels.case_study;
+
+    const payload = {
+      date: dateStr || new Date().toISOString().split('T')[0],
+      relation_type: 'social_proof',
+      client_id: clientId,
+      custom_format: format,
+      custom_instructions: formatInstr,
+    };
+    if (activeBrandId) payload.brand_id = activeBrandId;
+
+    const d = await api('relations/generate', 'POST', payload);
+    scriptEl.className = 'ai-out';
+    const output = [
+      `📌 KLIENT: ${client.client_name}`,
+      `✦ EFEKT: ${client.result}`,
+      client.transformation ? `→ TRANSFORMACJA: ${client.transformation}` : '',
+      '',
+      `HOOK:
+${d.hook || ''}`,
+      '',
+      `SKRYPT:
+${d.script || ''}`,
+    ].filter(Boolean).join('
+');
+    scriptEl.textContent = output;
+
+    // Pre-fill topic
+    const topicEl = document.getElementById('cal2-topic');
+    if (topicEl && !topicEl.value) topicEl.value = `Sukces: ${client.client_name} — ${(client.result||'').substring(0,50)}`;
+
+    notify('✦ Post z sukcesu klienta wygenerowany!');
+  } catch(e) {
+    scriptEl.className = 'ai-out';
+    scriptEl.textContent = 'Błąd: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '🏆 GENERUJ Z KLIENTA';
 }
 
 function closeDetail() {
@@ -2493,32 +2581,40 @@ async function loadRelationWeek() {
     { date: sat.toISOString().split('T')[0], type: 'value', label: 'SOBOTA — VALUE', color: '#7c3aed' },
     { date: sun.toISOString().split('T')[0], type: 'social_proof', label: 'NIEDZIELA — SOCIAL PROOF', color: '#be185d' },
   ];
-  const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+  const bq = activeBrandId ? '?brand_id=' + activeBrandId : '';
   const month = fri.toISOString().substring(0,7);
-  const plans = await api(`relations${bq ? bq+'&month='+month : '?month='+month}`).catch(()=>[]);
+  const mq = bq ? bq + '&month=' + month : '?month=' + month;
+  const plans = await api('relations' + mq).catch(()=>[]);
   const planMap = {};
   (plans||[]).forEach(p => { planMap[p.date] = p; });
-  
+
   const grid = document.getElementById('rel-days-grid');
   if (!grid) return;
+
   grid.innerHTML = days.map(d => {
     const plan = planMap[d.date] || {};
     const hasScript = !!plan.script;
-    return `
-    <div class="rel-day-card">
-      <div class="rel-day-header" style="color:${d.color}">${d.label}</div>
-      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">${d.date}</div>
-      ${hasScript ? `
-        <div style="font-size:10px;font-family:var(--fh);color:var(--text);margin-bottom:6px">HOOK: ${plan.hook||''}</div>
-        <div class="rel-script" style="font-size:10px;color:var(--muted);max-height:200px;overflow-y:auto;margin-bottom:12px">${(plan.script||'').substring(0,400)}${(plan.script||'').length>400?'…':''}</div>
-      ` : `<div style="font-size:11px;color:var(--muted2);margin-bottom:12px">Brak planu na ten dzień.</div>`}
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-sm" style="background:${d.color};font-size:9px" onclick="generateSingleRelation('${d.date}','${d.type}')">GENERUJ RELACJĘ</button>
-        ${hasScript ? `<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyText('${(plan.script||'').replace(/'/g,"\'")}')">KOPIUJ</button>` : ''}
-      </div>
-    </div>`;
+    const scriptId = 'rel-script-' + d.date;
+    return '<div class="rel-day-card">' +
+      '<div class="rel-day-header" style="color:' + d.color + '">' + d.label + '</div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:12px">' + d.date + '</div>' +
+      (hasScript ? 
+        '<div style="font-size:10px;font-family:var(--fh);color:var(--text);margin-bottom:6px">HOOK: ' + (plan.hook||'') + '</div>' +
+        '<div id="' + scriptId + '" style="font-size:10px;color:var(--muted);max-height:200px;overflow-y:auto;margin-bottom:12px;white-space:pre-wrap">' + (plan.script||'').substring(0,400) + ((plan.script||'').length>400?'…':'') + '</div>'
+        : '<div style="font-size:11px;color:var(--muted2);margin-bottom:12px">Brak planu na ten dzień.</div>') +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+        '<button class="btn btn-sm" style="background:' + d.color + ';font-size:9px" onclick="generateSingleRelation('' + d.date + '','' + d.type + '')">GENERUJ RELACJĘ</button>' +
+        (hasScript ? '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyRelScript('' + scriptId + '')">KOPIUJ</button>' : '') +
+      '</div>' +
+    '</div>';
   }).join('');
 }
+
+function copyRelScript(scriptId) {
+  const el = document.getElementById(scriptId);
+  if (el) copyText(el.textContent);
+}
+
 
 async function generateSingleRelation(date, relationType) {
   const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
