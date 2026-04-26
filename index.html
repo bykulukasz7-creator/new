@@ -147,6 +147,39 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .agent-link-label{font-size:9px;letter-spacing:2px;color:var(--lime);font-family:var(--fh);font-weight:700;margin-bottom:8px;}
 .agent-link-url{font-size:11px;color:var(--text);word-break:break-all;}
 
+
+/* ── CALENDAR V2 ── */
+.cal2-day{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:7px;min-height:80px;cursor:pointer;transition:all .12s;position:relative;}
+.cal2-day:hover{border-color:var(--border2);}
+.cal2-day.empty{background:var(--s1);opacity:.3;cursor:default;pointer-events:none;}
+.cal2-day.selected{border-color:var(--lime);box-shadow:0 0 0 1px var(--lime);}
+.cal2-day-num{font-size:9px;font-family:var(--fh);font-weight:800;color:var(--muted);margin-bottom:4px;}
+.cal2-day-stage{font-size:7px;padding:1px 5px;border-radius:10px;font-family:var(--fh);font-weight:700;letter-spacing:.5px;display:inline-block;margin-bottom:3px;}
+.cal2-day-topic{font-size:9px;color:var(--text);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+.cal2-day-refresh{position:absolute;top:4px;right:4px;background:none;border:none;color:var(--muted2);cursor:pointer;font-size:12px;line-height:1;padding:2px;opacity:0;transition:opacity .12s;}
+.cal2-day:hover .cal2-day-refresh{opacity:1;}
+.cal2-day-refresh:hover{color:var(--lime);}
+.stage-tofu{background:#4f46e522;color:#818cf8;}
+.stage-mofu{background:#0891b222;color:#22d3ee;}
+.stage-bofu{background:#16a34a22;color:#4ade80;}
+.stage-sprzedaz{background:#d9770622;color:#fbbf24;}
+.stage-relacja-pt{background:#e11d4822;color:#fb7185;}
+.stage-relacja-sb{background:#7c3aed22;color:#a78bfa;}
+.stage-relacja-nd{background:#be185d22;color:#f472b6;}
+.stage-relacja{background:#e11d4822;color:#fb7185;}
+
+/* ── CLIENTS ── */
+.client-card{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;display:flex;gap:12px;}
+.client-card.exhausted{opacity:.5;border-style:dashed;}
+.client-av{width:38px;height:38px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:14px;color:var(--bg);flex-shrink:0;}
+.client-result{font-size:11px;color:var(--lime);font-family:var(--fh);font-weight:700;margin:4px 0;}
+.client-transform{font-size:10px;color:var(--muted);line-height:1.5;}
+
+/* ── RELATIONS ── */
+.rel-day-card{background:var(--s1);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.rel-day-header{font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.rel-script{font-size:11px;color:var(--text);line-height:1.75;white-space:pre-wrap;}
+
 /* ── BRAND SWITCHER ── */
 .brand-switcher-overlay{position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(10px);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
 .brand-switcher-card{background:var(--s1);border:1px solid var(--border2);border-radius:14px;padding:36px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;}
@@ -187,7 +220,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <div class="nav-item" data-page="scripts" onclick="nav(this)"><span class="nav-icon">✦</span>Generator Skryptów<span class="nav-badge">CORE</span></div>
     <div class="nav-item" data-page="script-agent" onclick="nav(this)"><span class="nav-icon">🤖</span>Script Agent<span class="nav-badge" style="background:var(--purple)">AI</span></div>
     <div class="nav-item" data-page="reel" onclick="nav(this)"><span class="nav-icon">▶</span>Reel Analyzer</div>
-    <div class="nav-item" data-page="calendar" onclick="nav(this)"><span class="nav-icon">▦</span>Kalendarz</div>
+    <div class="nav-item" data-page="calendar-v2" onclick="nav(this)"><span class="nav-icon">▦</span>Kalendarz</div>
   </div>
   <div class="nav-group">
     <div class="nav-group-label">Kanały & Metryki</div>
@@ -197,6 +230,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <div class="nav-item" data-page="profile" onclick="nav(this)"><span class="nav-icon">◎</span>Audyt Profilu</div>
     <div class="nav-item" data-page="dm" onclick="nav(this)"><span class="nav-icon">◇</span>DM Generator</div>
     <div class="nav-item" data-page="x-style" onclick="nav(this)"><span class="nav-icon">𝕏</span>Mój Styl X<span class="nav-badge" style="background:var(--cyan)">STYLE</span></div>
+    <div class="nav-item" data-page="clients" onclick="nav(this)"><span class="nav-icon">🏆</span>Sukcesy Klientów<span class="nav-badge" style="background:var(--gold)">NEW</span></div>
+    <div class="nav-item" data-page="relations" onclick="nav(this)"><span class="nav-icon">📱</span>Planer Relacji<span class="nav-badge" style="background:var(--red)">Pt/Sb/Nd</span></div>
     <div class="nav-item" data-page="agent" onclick="nav(this)"><span class="nav-icon">🧠</span>Knowledge Agent</div>
   </div>
   <div class="sidebar-footer">
@@ -660,6 +695,173 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .sa-conv-tag{font-size:8px;padding:2px 8px;border-radius:20px;border:1px solid var(--purple);color:var(--purple);font-family:var(--fh);font-weight:700;}
 </style>
 
+
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- KALENDARZ V2 -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-calendar-v2">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Kalendarz Treści</div><div class="ph-sub">PLANOWANIE MIESIĘCZNE · HISTORIA · RELACJE PT/SB/ND</div></div>
+    <div class="ph-right">
+      <select class="select" id="cal2-month-select" onchange="loadCalendarMonth(this.value)" style="width:150px;font-size:11px;padding:7px 10px"></select>
+      <button class="btn btn-ghost btn-sm" onclick="openNewMonth()">+ NOWY MIESIĄC</button>
+      <button class="btn btn-sm" onclick="generateCalendarV2()" id="cal2-gen-btn">▦ GENERUJ</button>
+    </div>
+  </div>
+
+  <!-- Legenda -->
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;font-size:10px;font-family:var(--fb)">
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#4f46e5;display:inline-block"></span>TOFU</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#0891b2;display:inline-block"></span>MOFU</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#16a34a;display:inline-block"></span>BOFU</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#d97706;display:inline-block"></span>SPRZEDAŻ</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#e11d48;display:inline-block"></span>RELACJA Pt</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#7c3aed;display:inline-block"></span>RELACJA Sb</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#be185d;display:inline-block"></span>RELACJA Nd</span>
+  </div>
+
+  <!-- Calendar grid -->
+  <div id="cal2-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px">
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">PON</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">WT</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">ŚR</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">CZW</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;color:var(--red)">PT</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;color:var(--purple)">SB</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;color:#be185d">ND</div>
+  </div>
+  <div id="cal2-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+
+  <!-- Day detail panel -->
+  <div class="card mt20" id="cal2-detail" style="display:none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div class="card-title" id="cal2-detail-date" style="margin:0">—</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="refreshDay()" id="cal2-refresh-btn">🔄 ODŚWIEŻ POMYSŁ</button>
+        <button class="btn btn-sm" onclick="saveDay()" id="cal2-save-btn">ZAPISZ</button>
+        <button class="btn btn-ghost btn-sm" onclick="closeDetail()">✕</button>
+      </div>
+    </div>
+    <div class="g2">
+      <div>
+        <div class="field"><label class="label">TEMAT / TYTUŁ</label><input class="input" id="cal2-topic" placeholder="Temat posta..."/></div>
+        <div class="field"><label class="label">OPIS / CO POKAZAĆ</label><textarea class="textarea" id="cal2-desc" rows="4" placeholder="Co konkretnie pokazać..."></textarea></div>
+        <div class="ir mb12">
+          <div><label class="label">PLATFORMA</label><select class="select" id="cal2-platform"><option>IG</option><option>TikTok</option><option>X</option><option>YT</option><option>IG+TikTok</option></select></div>
+          <div><label class="label">FORMAT</label><select class="select" id="cal2-format"><option>Talking Head</option><option>Storytime</option><option>Rant</option><option>Tutorial</option><option>Relacja/Story</option><option>Reel</option></select></div>
+        </div>
+        <div class="field" id="cal2-relation-section" style="display:none">
+          <label class="label" style="color:var(--red)">🔗 GENERUJ SKRYPT RELACJI</label>
+          <select class="select" id="cal2-client-select" style="margin-bottom:8px"><option value="">-- wybierz klienta (opcjonalnie) --</option></select>
+          <button class="btn btn-sm" style="background:var(--red);color:#fff" onclick="generateRelation()" id="cal2-rel-btn">GENERUJ RELACJĘ</button>
+        </div>
+      </div>
+      <div>
+        <div class="label" style="margin-bottom:8px">WYGENEROWANY SKRYPT / NOTATKI</div>
+        <div class="ai-out" id="cal2-script" style="min-height:180px;font-size:11px">Kliknij "Odśwież pomysł" lub "Generuj relację"...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SUKCESY KLIENTÓW -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-clients">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Sukcesy Klientów</div><div class="ph-sub">CASE STUDIES · TRANSFORMACJE · BAZA DO RELACJI I CONTENTU</div></div>
+  </div>
+
+  <div style="background:var(--s2);border:1px solid rgba(232,184,75,.2);border-radius:8px;padding:14px 20px;margin-bottom:20px;font-size:11px;color:var(--muted);line-height:1.7">
+    <strong style="color:var(--gold);font-family:var(--fh);letter-spacing:1px">JAK TO DZIAŁA</strong> &nbsp;·&nbsp;
+    Dodaj sukces klienta — agent zaciąga go do relacji, skryptów i kalendarza. Kiedy temat klienta jest "wyczerpany", oznacz go i nie będzie się pojawiał w nowym contencie.
+  </div>
+
+  <div class="g2 mb16">
+    <div class="card">
+      <div class="card-title" style="color:var(--gold)">🏆 DODAJ SUKCES KLIENTA</div>
+      <div class="field"><label class="label">IMIĘ / PSEUDONIM KLIENTA</label><input class="input" id="cl-name" placeholder="np. Mateusz K., @mateuszk..."/></div>
+      <div class="field"><label class="label">NISZA / KIM JEST</label><input class="input" id="cl-niche" placeholder="np. trener personalny, 35 lat, Warszawa"/></div>
+      <div class="field"><label class="label">EFEKT / WYNIK (konkretny)</label><textarea class="textarea" id="cl-result" rows="2" placeholder="np. z 0 do 12k followers w 4 miesiące, 3 nowych klientów/mies."/></div>
+      <div class="field"><label class="label">TRANSFORMACJA (zanim → po)</label><textarea class="textarea" id="cl-transformation" rows="2" placeholder="np. Przed: brak obecności online, 0 leadów. Po: 3-4 leady/tydzień z social media"/></div>
+      <div class="ir mb12">
+        <div><label class="label">TIMEFRAME</label><input class="input" id="cl-timeframe" placeholder="np. 3 miesiące"/></div>
+        <div><label class="label">METRYKI</label><input class="input" id="cl-metrics" placeholder="np. +12k sub, 4.2% ER"/></div>
+      </div>
+      <div class="field"><label class="label">TESTIMONIAL (cytat klienta)</label><textarea class="textarea" id="cl-testimonial" rows="2" placeholder="Dosłowny cytat jeśli masz..."></textarea></div>
+      <button class="btn" onclick="addClient()" id="cl-add-btn" style="background:var(--gold);color:var(--bg)">DODAJ DO BAZY</button>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--gold)">📊 STATYSTYKI BAZY</div>
+      <div class="g2 mb16" style="gap:10px">
+        <div class="stat gold" style="padding:14px"><div class="stat-val" id="cl-active-count">—</div><div class="stat-lbl">AKTYWNYCH</div></div>
+        <div class="stat" style="padding:14px"><div class="stat-val" id="cl-exhausted-count">—</div><div class="stat-lbl">WYCZERPANYCH</div></div>
+      </div>
+      <div class="txt-muted mb12" style="font-size:11px;line-height:1.7">
+        <strong style="color:var(--text)">Aktywni</strong> — agent używa ich w contencie i relacjach.<br>
+        <strong style="color:var(--text)">Wyczerpani</strong> — nie pojawiają się w nowym contencie. Możesz ich reaktywować.
+      </div>
+      <div class="field">
+        <label class="label">FILTR</label>
+        <div class="chip-row">
+          <button class="chip on" onclick="setClientsFilter('active',this)">Aktywni</button>
+          <button class="chip" onclick="setClientsFilter('all',this)">Wszyscy</button>
+          <button class="chip" onclick="setClientsFilter('exhausted',this)">Wyczerpani</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏆 TWOJA BAZA KLIENTÓW <span class="badge badge-outline" id="cl-badge">0</span></div>
+    <div id="cl-list"><div class="empty-state"><div class="empty-icon">🏆</div>Brak klientów. Dodaj pierwszy sukces — agent będzie go używał w contencie i relacjach.</div></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- PLANER RELACJI -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="page" id="page-relations">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">Planer Relacji</div><div class="ph-sub">PIĄTEK · SOBOTA · NIEDZIELA — SPRZEDAŻ PRZEZ RELACJE</div></div>
+    <button class="btn btn-sm" onclick="generateWeekRelations()" id="rel-gen-btn" style="background:var(--red)">📱 GENERUJ TYDZIEŃ</button>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+    <div style="background:rgba(225,29,72,.08);border:1px solid rgba(225,29,72,.3);border-radius:8px;padding:14px 16px">
+      <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:#e11d48;margin-bottom:6px">📍 PIĄTEK — SOFT SELL</div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.6">Wywołaj pain. Zadaj pytanie. Nie sprzedawaj wprost. Buduj świadomość problemu.</div>
+    </div>
+    <div style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:14px 16px">
+      <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:#7c3aed;margin-bottom:6px">📍 SOBOTA — VALUE</div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.6">Rozwiń temat z piątku. Daj konkretną wiedzę. Pokaż metodę. Buduj autorytet.</div>
+    </div>
+    <div style="background:rgba(190,24,93,.08);border:1px solid rgba(190,24,93,.3);border-radius:8px;padding:14px 16px">
+      <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:#be185d;margin-bottom:6px">📍 NIEDZIELA — SOCIAL PROOF</div>
+      <div style="font-size:10px;color:var(--muted);line-height:1.6">Pokaż efekty klientów. Transformacje ze skólu. FOMO + dowód społeczny.</div>
+    </div>
+  </div>
+
+  <!-- Week selector -->
+  <div class="card mb16">
+    <div class="card-title">WYBIERZ TYDZIEŃ</div>
+    <div class="flex" style="gap:10px;align-items:center">
+      <input type="date" class="input" id="rel-week-start" style="width:180px" onchange="updateRelationWeek()"/>
+      <span class="txt-muted">→</span>
+      <span class="txt-muted" id="rel-week-end-label">—</span>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="prevRelWeek()">← POPRZEDNI</button>
+        <button class="btn btn-ghost btn-sm" onclick="nextRelWeek()">NASTĘPNY →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fri/Sat/Sun cards -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px" id="rel-days-grid">
+    <!-- filled by JS -->
+  </div>
+</div>
 
 <!-- X STYLE PAGE -->
 <div class="page" id="page-x-style">
@@ -1739,6 +1941,9 @@ async function initBrands() {
     } else {
       openBrandSwitcher(true);
     }
+    // Init new pages
+    initCalendarV2();
+    initRelations();
   } catch(e) {
     console.error('initBrands:', e);
     // Fallback — stary tryb bez multi-brand
@@ -1789,7 +1994,6 @@ async function setActiveBrand(brandId, showNotif = true) {
   closeBrandSwitcher();
 
   // Reload all data for this brand
-  const bq = '?brand_id=' + brandId;
   await loadStats();
   await loadRecentScripts();
   loadKb();
@@ -1799,6 +2003,7 @@ async function setActiveBrand(brandId, showNotif = true) {
   loadChannels();
   loadPostMetrics();
   loadAgentSessions();
+  loadClients();
 }
 
 function openBrandSwitcher(force = false) {
@@ -1849,6 +2054,523 @@ async function createNewBrand() {
   document.getElementById('setup-overlay').style.display = 'flex';
 }
 
+
+// ══════════════════════════════════════════════════════
+// KALENDARZ V2
+// ══════════════════════════════════════════════════════
+let cal2CurrentMonth = '';
+let cal2Days = {};
+let cal2SelectedDate = null;
+
+function getCurrentYearMonth() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+}
+
+async function initCalendarV2() {
+  const month = getCurrentYearMonth();
+  // Load available months
+  await loadCalendarMonths();
+  cal2CurrentMonth = month;
+  const sel = document.getElementById('cal2-month-select');
+  if (sel) {
+    // Ensure current month is in list
+    let found = false;
+    for (const o of sel.options) { if (o.value === month) { found = true; break; } }
+    if (!found) {
+      const opt = document.createElement('option');
+      opt.value = month; opt.textContent = formatMonthLabel(month);
+      sel.prepend(opt);
+    }
+    sel.value = month;
+  }
+  await loadCalendarMonth(month);
+}
+
+async function loadCalendarMonths() {
+  try {
+    const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+    const months = await api(`calendar-days/months${bq}`).catch(()=>[]);
+    const sel = document.getElementById('cal2-month-select');
+    if (!sel) return;
+    const current = getCurrentYearMonth();
+    const allMonths = [...new Set([...(months||[]), current])].sort().reverse();
+    sel.innerHTML = allMonths.map(m => `<option value="${m}">${formatMonthLabel(m)}</option>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+function formatMonthLabel(ym) {
+  const [y,m] = ym.split('-');
+  const names = ['','Styczeń','Luty','Marzec','Kwiecień','Maj','Czerwiec','Lipiec','Sierpień','Wrzesień','Październik','Listopad','Grudzień'];
+  return `${names[parseInt(m)]} ${y}`;
+}
+
+async function loadCalendarMonth(month) {
+  cal2CurrentMonth = month;
+  closeDetail();
+  const grid = document.getElementById('cal2-days');
+  if (!grid) return;
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:11px">Ładuję...</div>';
+  
+  const bq = activeBrandId ? `&brand_id=${activeBrandId}` : '';
+  const days = await api(`calendar-days?month=${month}${bq}`).catch(()=>[]);
+  cal2Days = {};
+  (days||[]).forEach(d => { cal2Days[d.date] = d; });
+  renderCalendarGrid(month);
+}
+
+function renderCalendarGrid(month) {
+  const grid = document.getElementById('cal2-days');
+  if (!grid) return;
+  const [year, mon] = month.split('-').map(Number);
+  const firstDay = new Date(year, mon-1, 1);
+  const daysInMonth = new Date(year, mon, 0).getDate();
+  // Monday-first: 0=Mon..6=Sun
+  let startOffset = firstDay.getDay() - 1;
+  if (startOffset < 0) startOffset = 6;
+  
+  let html = '';
+  // Empty cells before
+  for (let i = 0; i < startOffset; i++) {
+    html += '<div class="cal2-day empty"></div>';
+  }
+  // Days
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${month}-${String(d).padStart(2,'0')}`;
+    const day = cal2Days[dateStr];
+    const dow = new Date(year, mon-1, d).getDay(); // 0=Sun,5=Fri,6=Sat
+    const isRelation = dow === 5 || dow === 6 || dow === 0;
+    const isSale = d >= 6 && d <= 10;
+    const stage = day?.stage || (isRelation ? 'RELACJA' : isSale ? 'SPRZEDAŻ' : dow <= 2 ? 'TOFU' : 'MOFU');
+    const stageClass = {
+      'TOFU':'stage-tofu','MOFU':'stage-mofu','BOFU':'stage-bofu',
+      'SPRZEDAŻ':'stage-sprzedaz','SPRZEDAZ':'stage-sprzedaz',
+      'RELACJA':'stage-relacja',
+    }[stage] || 'stage-tofu';
+    const relType = day?.relation_type;
+    const relClass = relType==='soft_sell'?'stage-relacja-pt':relType==='value'?'stage-relacja-sb':relType==='social_proof'?'stage-relacja-nd':stageClass;
+    const finalClass = isRelation ? relClass : stageClass;
+    const relLabel = relType==='soft_sell'?'Pt·SOFT':relType==='value'?'Sb·VALUE':relType==='social_proof'?'Nd·PROOF':stage;
+    const displayStage = isRelation ? relLabel : stage;
+    const topic = day?.topic || '';
+    const hasPlan = !!topic;
+    html += `
+      <div class="cal2-day${cal2SelectedDate===dateStr?' selected':''}" onclick="selectDay('${dateStr}')" style="${isSale?'border-color:rgba(251,191,36,.4)':''}">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="cal2-day-num">${d}${isSale?'<span style="color:#fbbf24;margin-left:3px">💰</span>':''}</div>
+          <button class="cal2-day-refresh" onclick="event.stopPropagation();quickRefreshDay('${dateStr}')" title="Odśwież pomysł">🔄</button>
+        </div>
+        <div class="cal2-day-stage ${finalClass}">${displayStage}</div>
+        ${hasPlan ? `<div class="cal2-day-topic">${topic}</div>` : `<div style="font-size:8px;color:var(--muted2)">brak planu</div>`}
+      </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function selectDay(dateStr) {
+  cal2SelectedDate = dateStr;
+  renderCalendarGrid(cal2CurrentMonth);
+  const day = cal2Days[dateStr] || {};
+  const detail = document.getElementById('cal2-detail');
+  if (!detail) return;
+  detail.style.display = 'block';
+  detail.scrollIntoView({behavior:'smooth',block:'nearest'});
+  
+  const [y,m,d] = dateStr.split('-');
+  const dObj = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+  const dayNames = ['Niedziela','Poniedziałek','Wtorek','Środa','Czwartek','Piątek','Sobota'];
+  document.getElementById('cal2-detail-date').textContent = `${dayNames[dObj.getDay()]}, ${parseInt(d)}.${m}.${y}`;
+  
+  const topic = document.getElementById('cal2-topic');
+  const desc = document.getElementById('cal2-desc');
+  const plat = document.getElementById('cal2-platform');
+  const fmt = document.getElementById('cal2-format');
+  const script = document.getElementById('cal2-script');
+  if (topic) topic.value = day.topic || '';
+  if (desc) desc.value = day.description || '';
+  if (plat && day.platform) plat.value = day.platform;
+  if (fmt && day.format) fmt.value = day.format;
+  if (script) script.textContent = day.script || 'Kliknij "Odśwież pomysł" lub "Generuj relację"...';
+  
+  const dow = dObj.getDay();
+  const isRelation = dow === 5 || dow === 6 || dow === 0;
+  const relSection = document.getElementById('cal2-relation-section');
+  if (relSection) {
+    relSection.style.display = isRelation ? 'block' : 'none';
+    if (isRelation) loadClientSelectForRelation();
+  }
+  document.getElementById('cal2-detail').dataset.date = dateStr;
+  document.getElementById('cal2-detail').dataset.relationType = day.relation_type || (dow===5?'soft_sell':dow===6?'value':'social_proof');
+}
+
+async function loadClientSelectForRelation() {
+  const sel = document.getElementById('cal2-client-select');
+  if (!sel) return;
+  const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+  const clients = await api(`clients${bq}`).catch(()=>[]);
+  sel.innerHTML = '<option value="">-- wybierz klienta (opcjonalnie) --</option>' +
+    (clients||[]).map(c => `<option value="${c.id}">${c.client_name}${c.result?' — '+c.result.substring(0,40):''}</option>`).join('');
+}
+
+function closeDetail() {
+  const detail = document.getElementById('cal2-detail');
+  if (detail) detail.style.display = 'none';
+  cal2SelectedDate = null;
+  renderCalendarGrid(cal2CurrentMonth);
+}
+
+async function refreshDay() {
+  const dateStr = document.getElementById('cal2-detail')?.dataset.date;
+  if (!dateStr) return;
+  await quickRefreshDay(dateStr, true);
+}
+
+async function quickRefreshDay(dateStr, showDetail = false) {
+  const btn = document.getElementById('cal2-refresh-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spin"></span>'; }
+  const scriptEl = document.getElementById('cal2-script');
+  if (scriptEl && showDetail) { scriptEl.className = 'ai-out loading'; scriptEl.textContent = 'AI generuje nowy pomysł...'; }
+  try {
+    const payload = { date: dateStr };
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    const d = await api('calendar-days/refresh-day', 'POST', payload);
+    cal2Days[dateStr] = d;
+    renderCalendarGrid(cal2CurrentMonth);
+    if (showDetail && d) {
+      const topic = document.getElementById('cal2-topic');
+      const desc = document.getElementById('cal2-desc');
+      const scriptEl2 = document.getElementById('cal2-script');
+      if (topic) topic.value = d.topic || '';
+      if (desc) desc.value = d.description || '';
+      if (scriptEl2) { scriptEl2.className = 'ai-out'; scriptEl2.textContent = d.hook || d.topic || ''; }
+    }
+    notify('✦ Pomysł odświeżony!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 ODŚWIEŻ POMYSŁ'; }
+}
+
+async function saveDay() {
+  const dateStr = document.getElementById('cal2-detail')?.dataset.date;
+  if (!dateStr) return;
+  const btn = document.getElementById('cal2-save-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const payload = {
+      date: dateStr,
+      topic: v('cal2-topic'),
+      description: v('cal2-desc'),
+      platform: document.getElementById('cal2-platform')?.value || 'IG',
+      format: document.getElementById('cal2-format')?.value || 'Talking Head',
+    };
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    const d = await api('calendar-days', 'POST', payload);
+    cal2Days[dateStr] = d;
+    renderCalendarGrid(cal2CurrentMonth);
+    notify('✦ Dzień zapisany!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'ZAPISZ';
+}
+
+async function generateRelation() {
+  const detail = document.getElementById('cal2-detail');
+  const dateStr = detail?.dataset.date;
+  const relationType = detail?.dataset.relationType || 'soft_sell';
+  const clientId = document.getElementById('cal2-client-select')?.value || null;
+  if (!dateStr) return;
+  const btn = document.getElementById('cal2-rel-btn');
+  const scriptEl = document.getElementById('cal2-script');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> GENERUJĘ...';
+  scriptEl.className = 'ai-out loading'; scriptEl.textContent = 'Agent generuje skrypt relacji...';
+  try {
+    const payload = { date: dateStr, relation_type: relationType };
+    if (clientId) payload.client_id = clientId;
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    const d = await api('relations/generate', 'POST', payload);
+    scriptEl.className = 'ai-out';
+    scriptEl.textContent = `HOOK:\n${d.hook}\n\nSKRYPT:\n${d.script}`;
+    if (d.topic) {
+      const topicEl = document.getElementById('cal2-topic');
+      if (topicEl && !topicEl.value) topicEl.value = d.topic;
+    }
+    notify('✦ Relacja wygenerowana!');
+  } catch(e) { scriptEl.className='ai-out'; scriptEl.textContent='Błąd: '+e.message; }
+  btn.disabled = false; btn.textContent = 'GENERUJ RELACJĘ';
+}
+
+async function generateCalendarV2() {
+  const btn = document.getElementById('cal2-gen-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> GENERUJĘ...';
+  try {
+    const payload = { month: cal2CurrentMonth, posts_per_week: 5, platforms: 'IG+TikTok+X', format_mix: 'Mix' };
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    const d = await api('calendar-days/generate', 'POST', payload);
+    // Update local cache
+    (d.days||[]).forEach(day => { if (day.date) cal2Days[day.date] = day; });
+    renderCalendarGrid(cal2CurrentMonth);
+    await loadCalendarMonths();
+    notify(`✦ Wygenerowano ${d.generated || (d.days||[]).length} dni!`);
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '▦ GENERUJ';
+}
+
+function openNewMonth() {
+  const next = new Date();
+  next.setMonth(next.getMonth() + 1);
+  const ym = `${next.getFullYear()}-${String(next.getMonth()+1).padStart(2,'0')}`;
+  const sel = document.getElementById('cal2-month-select');
+  if (sel) {
+    let found = false;
+    for (const o of sel.options) { if (o.value === ym) { found = true; break; } }
+    if (!found) {
+      const opt = document.createElement('option');
+      opt.value = ym; opt.textContent = formatMonthLabel(ym);
+      sel.prepend(opt);
+    }
+    sel.value = ym;
+    loadCalendarMonth(ym);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// SUKCESY KLIENTÓW
+// ══════════════════════════════════════════════════════
+let clientsFilter = 'active';
+
+function setClientsFilter(f, el) {
+  clientsFilter = f;
+  document.querySelectorAll('#page-clients .chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+  loadClients();
+}
+
+async function addClient() {
+  const name = v('cl-name'), result = v('cl-result');
+  if (!name || !result) { notify('Wpisz imię i efekt klienta!'); return; }
+  const btn = document.getElementById('cl-add-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> DODAJĘ...';
+  try {
+    const payload = {
+      client_name: name,
+      client_handle: v('cl-niche') || null,
+      niche: v('cl-niche') || null,
+      result,
+      transformation: v('cl-transformation') || null,
+      timeframe: v('cl-timeframe') || null,
+      metrics: v('cl-metrics') || null,
+      testimonial: v('cl-testimonial') || null,
+    };
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    await api('clients', 'POST', payload);
+    ['cl-name','cl-niche','cl-result','cl-transformation','cl-timeframe','cl-metrics','cl-testimonial'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    await loadClients();
+    notify('✦ Sukces klienta dodany! Agent będzie go używał w contencie.');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = 'DODAJ DO BAZY';
+}
+
+async function loadClients() {
+  try {
+    const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+    const allQ = activeBrandId ? `?brand_id=${activeBrandId}&all=true` : '?all=true';
+    const [active, all] = await Promise.all([
+      api(`clients${bq}`).catch(()=>[]),
+      api(`clients${allQ}`).catch(()=>[]),
+    ]);
+    const exhausted = (all||[]).filter(c => c.is_exhausted);
+    const activeCount = document.getElementById('cl-active-count');
+    const exhaustedCount = document.getElementById('cl-exhausted-count');
+    if (activeCount) activeCount.textContent = (active||[]).length;
+    if (exhaustedCount) exhaustedCount.textContent = exhausted.length;
+    
+    let display;
+    if (clientsFilter === 'active') display = active;
+    else if (clientsFilter === 'exhausted') display = exhausted;
+    else display = all;
+    
+    const badge = document.getElementById('cl-badge');
+    if (badge) badge.textContent = (display||[]).length;
+    
+    const list = document.getElementById('cl-list');
+    if (!list) return;
+    if (!display || !display.length) {
+      list.innerHTML = '<div class="empty-state"><div class="empty-icon">🏆</div>Brak klientów w tej kategorii.</div>';
+      return;
+    }
+    list.innerHTML = display.map(c => `
+      <div class="client-card ${c.is_exhausted ? 'exhausted' : ''}">
+        <div class="client-av">${c.client_name.charAt(0).toUpperCase()}</div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+            <span style="font-family:var(--fh);font-weight:700;font-size:13px">${c.client_name}</span>
+            ${c.niche ? `<span style="font-size:9px;color:var(--muted)">${c.niche}</span>` : ''}
+            ${c.timeframe ? `<span class="badge badge-outline">${c.timeframe}</span>` : ''}
+            ${c.is_exhausted ? '<span class="badge" style="background:var(--muted2);color:var(--text)">WYCZERPANY</span>' : ''}
+            <span style="font-size:9px;color:var(--muted2);margin-left:auto">użyty ${c.used_count||0}×</span>
+          </div>
+          <div class="client-result">✦ ${c.result}</div>
+          ${c.transformation ? `<div class="client-transform">→ ${c.transformation}</div>` : ''}
+          ${c.metrics ? `<div style="font-size:9px;color:var(--cyan);margin-top:3px">📊 ${c.metrics}</div>` : ''}
+          ${c.testimonial ? `<div style="font-size:10px;color:var(--muted);font-style:italic;margin-top:6px;border-left:2px solid var(--border2);padding-left:8px">"${c.testimonial}"</div>` : ''}
+          <div style="display:flex;gap:8px;margin-top:8px">
+            ${c.is_exhausted
+              ? `<button class="btn btn-ghost btn-sm" onclick="reactivateClient('${c.id}')">REAKTYWUJ</button>`
+              : `<button class="btn btn-ghost btn-sm" style="border-color:rgba(255,77,46,.3);color:var(--red)" onclick="exhaustClient('${c.id}')">OZNACZ JAKO WYCZERPANY</button>`
+            }
+            <button class="btn btn-ghost btn-sm" onclick="deleteClient('${c.id}')" style="color:var(--muted2)">USUŃ</button>
+          </div>
+        </div>
+      </div>`).join('');
+  } catch(e) { console.error('loadClients:', e); }
+}
+
+async function exhaustClient(id) {
+  await api(`clients/${id}/exhaust`, 'POST', {}).catch(()=>{});
+  await loadClients();
+  notify('Klient oznaczony jako wyczerpany — nie pojawi się w nowym contencie.');
+}
+
+async function reactivateClient(id) {
+  await api(`clients/${id}/exhaust`, 'POST', { reactivate: true }).catch(()=>{});
+  // Actually patch directly
+  try {
+    const r = await fetch(`${API}/clients/${id}`, {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ is_exhausted: false })
+    });
+  } catch {}
+  await loadClients();
+  notify('✦ Klient reaktywowany!');
+}
+
+async function deleteClient(id) {
+  if (!confirm('Usunąć klienta z bazy?')) return;
+  await api(`clients/${id}`, 'DELETE').catch(()=>{});
+  await loadClients();
+  notify('Klient usunięty.');
+}
+
+// ══════════════════════════════════════════════════════
+// PLANER RELACJI
+// ══════════════════════════════════════════════════════
+let relWeekStart = null;
+
+function initRelations() {
+  // Set to last Friday
+  const now = new Date();
+  const dow = now.getDay();
+  const daysToFri = dow >= 5 ? dow - 5 : dow + 2;
+  const fri = new Date(now);
+  fri.setDate(now.getDate() - daysToFri);
+  relWeekStart = fri;
+  const friStr = fri.toISOString().split('T')[0];
+  const inp = document.getElementById('rel-week-start');
+  if (inp) { inp.value = friStr; updateRelationWeek(); }
+  loadRelationWeek();
+}
+
+function updateRelationWeek() {
+  const inp = document.getElementById('rel-week-start');
+  if (!inp || !inp.value) return;
+  relWeekStart = new Date(inp.value + 'T00:00:00');
+  const sun = new Date(relWeekStart);
+  sun.setDate(relWeekStart.getDate() + 2);
+  const endLabel = document.getElementById('rel-week-end-label');
+  if (endLabel) endLabel.textContent = sun.toLocaleDateString('pl-PL');
+  loadRelationWeek();
+}
+
+function prevRelWeek() {
+  if (!relWeekStart) return;
+  relWeekStart = new Date(relWeekStart);
+  relWeekStart.setDate(relWeekStart.getDate() - 7);
+  const inp = document.getElementById('rel-week-start');
+  if (inp) inp.value = relWeekStart.toISOString().split('T')[0];
+  updateRelationWeek();
+}
+function nextRelWeek() {
+  if (!relWeekStart) return;
+  relWeekStart = new Date(relWeekStart);
+  relWeekStart.setDate(relWeekStart.getDate() + 7);
+  const inp = document.getElementById('rel-week-start');
+  if (inp) inp.value = relWeekStart.toISOString().split('T')[0];
+  updateRelationWeek();
+}
+
+async function loadRelationWeek() {
+  if (!relWeekStart) return;
+  const fri = relWeekStart;
+  const sat = new Date(fri); sat.setDate(fri.getDate()+1);
+  const sun = new Date(fri); sun.setDate(fri.getDate()+2);
+  const days = [
+    { date: fri.toISOString().split('T')[0], type: 'soft_sell', label: 'PIĄTEK — SOFT SELL', color: '#e11d48' },
+    { date: sat.toISOString().split('T')[0], type: 'value', label: 'SOBOTA — VALUE', color: '#7c3aed' },
+    { date: sun.toISOString().split('T')[0], type: 'social_proof', label: 'NIEDZIELA — SOCIAL PROOF', color: '#be185d' },
+  ];
+  const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+  const month = fri.toISOString().substring(0,7);
+  const plans = await api(`relations${bq ? bq+'&month='+month : '?month='+month}`).catch(()=>[]);
+  const planMap = {};
+  (plans||[]).forEach(p => { planMap[p.date] = p; });
+  
+  const grid = document.getElementById('rel-days-grid');
+  if (!grid) return;
+  grid.innerHTML = days.map(d => {
+    const plan = planMap[d.date] || {};
+    const hasScript = !!plan.script;
+    return `
+    <div class="rel-day-card">
+      <div class="rel-day-header" style="color:${d.color}">${d.label}</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:12px">${d.date}</div>
+      ${hasScript ? `
+        <div style="font-size:10px;font-family:var(--fh);color:var(--text);margin-bottom:6px">HOOK: ${plan.hook||''}</div>
+        <div class="rel-script" style="font-size:10px;color:var(--muted);max-height:200px;overflow-y:auto;margin-bottom:12px">${(plan.script||'').substring(0,400)}${(plan.script||'').length>400?'…':''}</div>
+      ` : `<div style="font-size:11px;color:var(--muted2);margin-bottom:12px">Brak planu na ten dzień.</div>`}
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:${d.color};font-size:9px" onclick="generateSingleRelation('${d.date}','${d.type}')">GENERUJ RELACJĘ</button>
+        ${hasScript ? `<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyText('${(plan.script||'').replace(/'/g,"\'")}')">KOPIUJ</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function generateSingleRelation(date, relationType) {
+  const bq = activeBrandId ? `?brand_id=${activeBrandId}` : '';
+  const clients = await api(`clients${bq}`).catch(()=>[]);
+  let clientId = null;
+  if (relationType === 'social_proof' && clients && clients.length) {
+    // Pick least used
+    const sorted = [...clients].sort((a,b)=>(a.used_count||0)-(b.used_count||0));
+    clientId = sorted[0].id;
+  }
+  const grid = document.getElementById('rel-days-grid');
+  const btns = grid?.querySelectorAll('button');
+  btns?.forEach(b => b.disabled = true);
+  notify('⟳ Agent generuje relację...');
+  try {
+    const payload = { date, relation_type: relationType };
+    if (clientId) payload.client_id = clientId;
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    await api('relations/generate', 'POST', payload);
+    await loadRelationWeek();
+    notify('✦ Relacja wygenerowana!');
+  } catch(e) { notify('Błąd: ' + e.message); btns?.forEach(b => b.disabled = false); }
+}
+
+async function generateWeekRelations() {
+  if (!relWeekStart) return;
+  const btn = document.getElementById('rel-gen-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> GENERUJĘ...';
+  const fri = relWeekStart;
+  const types = ['soft_sell','value','social_proof'];
+  for (let i = 0; i < 3; i++) {
+    const d = new Date(fri); d.setDate(fri.getDate() + i);
+    await generateSingleRelation(d.toISOString().split('T')[0], types[i]);
+  }
+  btn.disabled = false; btn.textContent = '📱 GENERUJ TYDZIEŃ';
+}
 </script>
 </body>
 </html>
