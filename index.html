@@ -2268,8 +2268,7 @@ ${d.hook || ''}`,
       '',
       `SKRYPT:
 ${d.script || ''}`,
-    ].filter(Boolean).join('
-');
+    ].filter(Boolean).join('\n');
     scriptEl.textContent = output;
 
     // Pre-fill topic
@@ -2603,8 +2602,8 @@ async function loadRelationWeek() {
         '<div id="' + scriptId + '" style="font-size:10px;color:var(--muted);max-height:200px;overflow-y:auto;margin-bottom:12px;white-space:pre-wrap">' + (plan.script||'').substring(0,400) + ((plan.script||'').length>400?'…':'') + '</div>'
         : '<div style="font-size:11px;color:var(--muted2);margin-bottom:12px">Brak planu na ten dzień.</div>') +
       '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
-        '<button class="btn btn-sm" style="background:' + d.color + ';font-size:9px" onclick="generateSingleRelation('' + d.date + '','' + d.type + '')">GENERUJ RELACJĘ</button>' +
-        (hasScript ? '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyRelScript('' + scriptId + '')">KOPIUJ</button>' : '') +
+        '<button class="btn btn-sm" style="background:' + d.color + ';font-size:9px" onclick="generateSingleRelation(\'' + d.date + '\',\'' + d.type + '\')">' + 'GENERUJ RELACJĘ</button>' +
+        (hasScript ? '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyRelScript(\'' + scriptId + '\')">' + 'KOPIUJ</button>' : '') +
       '</div>' +
     '</div>';
   }).join('');
