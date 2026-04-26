@@ -181,10 +181,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .rel-script{font-size:11px;color:var(--text);line-height:1.75;white-space:pre-wrap;}
 
 /* ── BRAND SWITCHER ── */
-.brand-switcher-overlay{position:fixed;inset:0;background:rgba(0,0,0,.93);backdrop-filter:blur(10px);z-index:400;display:flex;align-items:center;justify-content:center;padding:20px;}
-.brand-switcher-card{background:var(--s1);border:1px solid var(--border2);border-radius:14px;padding:36px;max-width:500px;width:100%;max-height:88vh;overflow-y:auto;}
-.bsc-title{font-family:var(--fh);font-size:24px;font-weight:800;color:var(--lime);margin-bottom:4px;letter-spacing:2px;}
-.bsc-sub{font-size:11px;color:var(--muted);margin-bottom:24px;line-height:1.7;}
 .brand-card{background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .12s;}
 .brand-card:hover{border-color:var(--lime);background:rgba(201,245,60,.05);}
 .brand-card.selected{border-color:var(--lime);background:rgba(201,245,60,.08);}
@@ -243,13 +239,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 </aside>
 <main class="main">
 
-<div class="brand-active-bar" id="brand-active-bar" onclick="openBrandSwitcher()" style="display:none;position:sticky;top:0;z-index:10;">
-  <span>◈</span>
-  <span id="bar-brand-name">MARKA</span>
-  <span style="opacity:.4">·</span>
-  <span style="opacity:.5;font-weight:400">AKTYWNA</span>
-  <span style="margin-left:auto;opacity:.5;font-size:8px">ZMIEŃ ↗</span>
-</div>
+
 
 
 <!-- DASHBOARD -->
@@ -721,17 +711,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <span style="display:flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:2px;background:#be185d;display:inline-block"></span>RELACJA Nd</span>
   </div>
 
-  <!-- Calendar grid -->
-  <div id="cal2-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px">
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">PON</div>
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">WT</div>
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">ŚR</div>
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px">CZW</div>
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;color:var(--red)">PT</div>
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;color:var(--purple)">SB</div>
-    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px;color:#be185d">ND</div>
+  <!-- Calendar grid — headers + days in one grid -->
+  <div id="cal2-full-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px">
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px 0 8px">PON</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px 0 8px">WT</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px 0 8px">ŚR</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:var(--muted);padding:4px 0 8px">CZW</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:#ff4d2e;padding:4px 0 8px">PT</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:#a78bfa;padding:4px 0 8px">SB</div>
+    <div style="text-align:center;font-size:8px;letter-spacing:2px;color:#be185d;padding:4px 0 8px">ND</div>
   </div>
-  <div id="cal2-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px"></div>
+  <div id="cal2-days" style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:16px"></div>
 
   <!-- Day detail panel -->
   <div class="card mt20" id="cal2-detail" style="display:none">
@@ -920,20 +910,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 </div>
 
 
-<!-- BRAND SWITCHER OVERLAY -->
-<div class="brand-switcher-overlay" id="brand-switcher-overlay" style="display:none">
-  <div class="brand-switcher-card">
-    <div class="bsc-title">WYBIERZ MARKĘ</div>
-    <div class="bsc-sub">Każda marka ma osobną bazę wiedzy, skrypty, styl X i ustawienia.<br>Dane nie mieszają się między markami.</div>
-    <div id="brand-switcher-list">
-      <div class="empty-state" style="padding:16px 0"><div class="empty-icon" style="font-size:20px">◎</div>Ładowanie marek...</div>
-    </div>
-    <button class="brand-new-btn" onclick="createNewBrand()">+ UTWÓRZ NOWĄ MARKĘ</button>
-    <div class="flex mt16" id="bsc-cancel-row">
-      <button class="btn btn-ghost btn-sm" onclick="closeBrandSwitcher()">ANULUJ</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- SETUP OVERLAY -->
 <div class="overlay" id="setup-overlay">
@@ -1048,13 +1025,22 @@ async function saveBrand() {
       goals: v('s-goals'), results: v('s-results'),
       followers: parseInt(v('s-fol'))||0, avg_views: parseInt(v('s-views'))||0
     };
+    // Jezeli marka juz istnieje — zaktualizuj, nie twórz nowej
     if (activeBrandId) payload.id = activeBrandId;
     const saved = await api('brand', 'POST', payload);
+    const savedBrand = Array.isArray(saved) ? saved[0] : saved;
+    if (savedBrand?.id) {
+      activeBrandId = savedBrand.id;
+      allBrands = [savedBrand];
+    }
     document.getElementById('setup-overlay').style.display = 'none';
-    const brands = await api('brands').catch(() => []);
-    allBrands = brands || [];
-    const newId = (Array.isArray(saved) ? saved[0] : saved)?.id || activeBrandId || allBrands[0]?.id;
-    if (newId) await setActiveBrand(newId, true);
+    // Odśwież UI
+    document.getElementById('sAvatar').textContent = name.charAt(0).toUpperCase();
+    document.getElementById('sName').textContent = name;
+    document.getElementById('sNiche').textContent = (v('s-niche')||'').substring(0,26);
+    document.getElementById('db-status').textContent = '✓ Marka: ' + name + ' · Supabase aktywne';
+    document.getElementById('db-status').style.color = 'var(--lime)';
+    await loadStats(); await loadRecentScripts(); loadKb();
     notify('✦ Marka ' + name + ' zapisana!');
   } catch(e) { notify('Błąd: ' + e.message); }
   btn.disabled = false; btn.textContent = '✦ ZAPISZ I ZACZNIJ';
@@ -1959,106 +1945,61 @@ let allBrands = [];
 
 async function initBrands() {
   try {
-    const brands = await api('brands').catch(() => []);
-    allBrands = brands || [];
-
-    // Restore last used brand
-    const saved = localStorage.getItem('kult_active_brand');
-    if (saved && allBrands.find(b => b.id === saved)) {
-      activeBrandId = saved;
-    } else if (allBrands.length > 0) {
-      activeBrandId = allBrands[0].id;
-    }
-
-    if (allBrands.length === 0) {
-      // Brak marek — pokaż setup
+    // Pobierz marke — pojedyncza marka, bez multi-brand
+    const brand = await api('brand').catch(() => null);
+    
+    if (!brand || !brand.id) {
+      // Brak marki — pierwszy raz, pokaż setup
       openSetup();
       return;
     }
 
-    if (activeBrandId) {
-      await setActiveBrand(activeBrandId, false);
-    } else {
-      openBrandSwitcher(true);
-    }
-    // Init new pages
-    initCalendarV2();
-    initRelations();
-  } catch(e) {
-    console.error('initBrands:', e);
-    // Fallback — stary tryb bez multi-brand
-    await loadBrand();
-    await loadStats();
-    await loadRecentScripts();
-    loadKb(); loadCompetitors(); loadDmTemplates();
-    loadChannels(); loadPostMetrics(); loadAgentSessions(); loadXPosts();
-  }
-}
+    // Marka istnieje — zaladuj bez popup
+    activeBrandId = brand.id;
+    allBrands = [brand];
+    localStorage.setItem('kult_active_brand', brand.id);
 
-async function setActiveBrand(brandId, showNotif = true) {
-  activeBrandId = brandId;
-  localStorage.setItem('kult_active_brand', brandId);
-  const brand = allBrands.find(b => b.id === brandId);
-
-  if (brand) {
-    // Sidebar
+    // Zaktualizuj UI
     document.getElementById('sAvatar').textContent = brand.name.charAt(0).toUpperCase();
     document.getElementById('sName').textContent = brand.name;
-    document.getElementById('sNiche').textContent = (brand.niche||'').substring(0,26)+'…';
-    // Active bar
-    const bar = document.getElementById('brand-active-bar');
-    if (bar) {
-      document.getElementById('bar-brand-name').textContent = brand.name.toUpperCase();
-      bar.style.display = 'flex';
-    }
-    // Dashboard stats
+    document.getElementById('sNiche').textContent = (brand.niche||'').substring(0,26);
     document.getElementById('d-views').textContent = brand.avg_views ? Number(brand.avg_views).toLocaleString('pl') : '—';
     document.getElementById('d-followers').textContent = brand.followers ? Number(brand.followers).toLocaleString('pl') : '—';
     document.getElementById('d-platform').textContent = brand.main_platform || '—';
     document.getElementById('db-status').textContent = '✓ Marka: ' + brand.name + ' · Supabase aktywne';
     document.getElementById('db-status').style.color = 'var(--lime)';
-    // Pre-fill setup form
+
+    // Pre-fill setup form (do edycji)
     ['name','niche','offer','target','origin','beliefs','goals','results'].forEach(k => {
-      const el = document.getElementById('s-'+k);
-      if (el) el.value = brand[k] || '';
+      const el = document.getElementById('s-'+k); if (el) el.value = brand[k] || '';
     });
-    const take = document.getElementById('s-take');
-    if (take) take.value = brand.contrarian_take || '';
-    const fol = document.getElementById('s-fol');
-    if (fol) fol.value = brand.followers || '';
-    const views = document.getElementById('s-views');
-    if (views) views.value = brand.avg_views || '';
-    if (showNotif) notify('✦ Marka: ' + brand.name);
+    const take = document.getElementById('s-take'); if (take) take.value = brand.contrarian_take || '';
+    const fol = document.getElementById('s-fol'); if (fol) fol.value = brand.followers || '';
+    const views = document.getElementById('s-views'); if (views) views.value = brand.avg_views || '';
+
+    // Zaladuj dane
+    await loadStats();
+    await loadRecentScripts();
+    loadKb(); loadXPosts(); loadCompetitors();
+    loadDmTemplates(); loadChannels(); loadPostMetrics();
+    loadAgentSessions(); loadClients();
+    initCalendarV2();
+    initRelations();
+
+  } catch(e) {
+    console.error('initBrands:', e);
+    openSetup();
   }
-
-  closeBrandSwitcher();
-
-  // Reload all data for this brand
-  await loadStats();
-  await loadRecentScripts();
-  loadKb();
-  loadXPosts();
-  loadCompetitors();
-  loadDmTemplates();
-  loadChannels();
-  loadPostMetrics();
-  loadAgentSessions();
-  loadClients();
 }
 
-function openBrandSwitcher(force = false) {
-  const overlay = document.getElementById('brand-switcher-overlay');
-  if (!overlay) return;
-  overlay.style.display = 'flex';
-  const cancelRow = document.getElementById('bsc-cancel-row');
-  if (cancelRow) cancelRow.style.display = force ? 'none' : 'flex';
-  renderBrandList();
+async function setActiveBrand(brandId, showNotif = true) {
+  // Uproszczona wersja dla jednej marki
+  activeBrandId = brandId;
+  if (showNotif) notify('✦ Marka zapisana!');
 }
 
-function closeBrandSwitcher() {
-  const overlay = document.getElementById('brand-switcher-overlay');
-  if (overlay) overlay.style.display = 'none';
-}
+function openBrandSwitcher() { openSetup(); }
+function closeBrandSwitcher() { /* no-op */ }
 
 function renderBrandList() {
   const list = document.getElementById('brand-switcher-list');
@@ -2150,7 +2091,7 @@ async function loadCalendarMonth(month) {
   closeDetail();
   const grid = document.getElementById('cal2-days');
   if (!grid) return;
-  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted);font-size:11px">Ładuję...</div>';
+  grid.innerHTML = '<div style="grid-column:1/-1;padding:20px;text-align:center;color:var(--muted);font-size:11px">Ładuję...</div>';
   
   const bq = activeBrandId ? `&brand_id=${activeBrandId}` : '';
   const bfParam2 = activeBrandId ? `&brand_id=${activeBrandId}` : '';
