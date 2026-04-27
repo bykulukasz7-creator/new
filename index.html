@@ -546,13 +546,33 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       <div class="field"><label class="label">TEMAT / POMYSŁ</label><textarea class="textarea" id="sa-topic" rows="3" placeholder="np. historia jak straciłem pierwszego klienta i czego mnie nauczyła..."></textarea></div>
       <div class="ir mb12">
         <div><label class="label">PLATFORMA</label><select class="select" id="sa-platform" onchange="onSAPlatformChange()"><option>YouTube Shorts</option><option>YouTube</option><option>Instagram Reels</option><option>TikTok</option><option>X (Twitter)</option></select></div>
-        <div><label class="label">FORMAT</label><select class="select" id="sa-format"><option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option><option>Thread / Wątek</option><option>Pojedynczy tweet</option></select></div>
+        <div><label class="label">FORMAT</label><select class="select" id="sa-format" onchange="onSAFormatChange()"><option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option><option>Thread / Wątek</option><option>Pojedynczy tweet</option><option>Karuzela (Carousel)</option></select></div>
       </div>
       <!-- X-specific notice -->
       <div id="sa-x-notice" style="display:none;background:rgba(138,138,128,.08);border:1px solid rgba(138,138,128,.3);border-radius:6px;padding:12px 16px;margin-bottom:12px">
         <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:#8a8a80;margin-bottom:6px">𝕏 TRYB PISANY — X (TWITTER)</div>
         <div style="font-size:11px;color:var(--muted);line-height:1.6">Agent wygeneruje <strong style="color:var(--text)">post tekstowy</strong> (nie skrypt mówiony). Styl zaciągany z Twoich tweetów @Testosteryk.</div>
         <div id="sa-x-style-status" class="mt8" style="font-size:10px;color:var(--muted)">⏳ Sprawdzam czy styl jest załadowany…</div>
+      </div>
+      <!-- Carousel settings -->
+      <div id="sa-carousel-section" style="display:none;background:rgba(201,245,60,.06);border:1px solid rgba(201,245,60,.2);border-radius:6px;padding:12px 16px;margin-bottom:12px">
+        <div style="font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;color:var(--lime);margin-bottom:8px">USTAWIENIA KARUZELI</div>
+        <div class="ir mb8">
+          <div><label class="label">LICZBA SLAJDOW</label>
+            <select class="select" id="sa-slide-count">
+              <option value="5">5 slajdow — prosty insight</option>
+              <option value="6">6 slajdow — prosty insight</option>
+              <option value="7" selected>7 slajdow — lista / how-to</option>
+              <option value="8">8 slajdow — lista / how-to</option>
+              <option value="9">9 slajdow — deep-dive</option>
+              <option value="10">10 slajdow — deep-dive</option>
+            </select>
+          </div>
+          <div><label class="label">STYL WIZUALNY (opcjonalnie)</label>
+            <input class="input" id="sa-visual-style" placeholder="np. editorial minimalizm, ciemne tlo..."/>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);line-height:1.6">Agent wygeneruje headline, body i visual direction dla kazdego slajdu. Gotowe do Canva.</div>
       </div>
       <div class="field"><label class="label">CEL KONWERSJI</label>
         <select class="select" id="sa-conversion">
@@ -1577,8 +1597,16 @@ function onSAPlatformChange() {
     checkXStyleStatus();
   } else {
     notice.style.display = 'none';
-    formatSel.innerHTML = '<option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option>';
+    formatSel.innerHTML = '<option>Talking Head</option><option>Storytime</option><option>Rant / Kontrowersja</option><option>Tutorial / Tips</option><option>POV / Scena</option><option>Karuzela (Carousel)</option>';
   }
+  onSAFormatChange();
+}
+
+function onSAFormatChange() {
+  const fmt = document.getElementById('sa-format')?.value || '';
+  const isC = fmt.toLowerCase().includes('karuzela') || fmt.toLowerCase().includes('carousel');
+  const sec = document.getElementById('sa-carousel-section');
+  if (sec) sec.style.display = isC ? 'block' : 'none';
 }
 
 async function checkXStyleStatus() {
@@ -1630,26 +1658,58 @@ async function fetchXStyle() {
 
 async function runScriptAgent() {
   const topic = v('sa-topic'); if(!topic){notify('Wpisz temat!');return;}
+  const format = v('sa-format');
+  const isCarousel = format.toLowerCase().includes('karuzela') || format.toLowerCase().includes('carousel');
   const btn = document.getElementById('sa-btn');
   const scriptEl = document.getElementById('sa-script');
-  btn.disabled=true; btn.innerHTML='<span class="spin"></span> AGENT ANALIZUJE…';
-  scriptEl.className='ai-out loading'; scriptEl.textContent='Agent czyta całą Twoją bazę wiedzy…';
+  btn.disabled=true; btn.innerHTML='<span class="spin"></span> AGENT ANALIZUJE...';
   document.getElementById('sa-actions').style.display='none';
   document.getElementById('sa-analysis-card').style.display='none';
-  try {
-    const d = await syncApi('script-agent/generate','POST',{topic, platform:v('sa-platform'), format:v('sa-format'), target_conversion:v('sa-conversion')});
-    scriptEl.className='ai-out'; scriptEl.textContent=d.script||'';
-    if (d.analysis) { document.getElementById('sa-analysis').textContent=d.analysis; document.getElementById('sa-analysis-card').style.display='block'; }
-    document.getElementById('sa-actions').style.display='flex';
-    const saRating = document.getElementById('sa-rating-row');
-    if (saRating) saRating.remove();
-    const saDiv = document.createElement('div');
-    saDiv.id = 'sa-rating-row';
-    saDiv.innerHTML = ratingRow('session', '', v('sa-topic').substring(0,60));
-    document.getElementById('sa-actions').after(saDiv);
-    await loadAgentSessions();
-  } catch(e) { scriptEl.className='ai-out'; scriptEl.textContent='Błąd: '+e.message; }
-  btn.disabled=false; btn.innerHTML='🤖 GENERUJ Z AGENT AI';
+
+  if (isCarousel) {
+    scriptEl.className='ai-out loading';
+    scriptEl.textContent='Agent generuje karuzele slajd po slajdzie...';
+    try {
+      const sc = parseInt(document.getElementById('sa-slide-count')?.value||'7');
+      const vs = document.getElementById('sa-visual-style')?.value?.trim()||'';
+      const d = await syncApi('script-agent/carousel','POST',{topic,platform:v('sa-platform'),target_conversion:v('sa-conversion'),slide_count:sc,visual_style:vs});
+      scriptEl.className='ai-out';
+      if (d.slides && d.slides.length) {
+        let out = 'KARUZELA x ' + d.slide_count + ' SLAJDOW\n' + '='.repeat(40) + '\n\n';
+        d.slides.forEach(function(slide,i){
+          out += 'SLAJD ' + (slide.number||i+1) + (slide.isCTA||i===d.slides.length-1?' - CTA':'') + '\n';
+          if(slide.headline) out += 'HEADLINE: ' + slide.headline + '\n';
+          if(slide.body && slide.body!=='brak' && slide.body!=='none') out += 'BODY: ' + slide.body + '\n';
+          if(slide.visual) out += 'VISUAL: ' + slide.visual + '\n';
+          out += '\n';
+        });
+        scriptEl.textContent = out;
+      } else { scriptEl.textContent = d.text || ''; }
+      document.getElementById('sa-actions').style.display='flex';
+      if (d.text) {
+        const ac = document.getElementById('sa-analysis-card');
+        const at = ac ? ac.querySelector('.card-title') : null;
+        if (at) at.textContent = 'PELNY TEKST KARUZELI (kopiuj do Canva)';
+        document.getElementById('sa-analysis').textContent = d.text;
+        if (ac) ac.style.display='block';
+      }
+      await loadAgentSessions();
+    } catch(e) { scriptEl.className='ai-out'; scriptEl.textContent='Blad: '+e.message; }
+  } else {
+    scriptEl.className='ai-out loading'; scriptEl.textContent='Agent czyta cala Twoja baze wiedzy...';
+    try {
+      const d = await syncApi('script-agent/generate','POST',{topic,platform:v('sa-platform'),format,target_conversion:v('sa-conversion')});
+      scriptEl.className='ai-out'; scriptEl.textContent=d.script||'';
+      if(d.analysis){document.getElementById('sa-analysis').textContent=d.analysis;document.getElementById('sa-analysis-card').style.display='block';}
+      document.getElementById('sa-actions').style.display='flex';
+      const sr=document.getElementById('sa-rating-row'); if(sr) sr.remove();
+      const sd=document.createElement('div'); sd.id='sa-rating-row';
+      sd.innerHTML=ratingRow('session','',v('sa-topic').substring(0,60));
+      document.getElementById('sa-actions').after(sd);
+      await loadAgentSessions();
+    } catch(e){scriptEl.className='ai-out';scriptEl.textContent='Blad: '+e.message;}
+  }
+  btn.disabled=false; btn.textContent='GENERUJ Z AGENT AI';
 }
 
 async function saveAgentScript() {
