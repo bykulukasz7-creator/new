@@ -1725,40 +1725,49 @@ async function saveAgentScript() {
   notify('✦ Skrypt zapisany do bazy wiedzy!');
 }
 
+// Pamiec sesji agenta (do zaladowania bez problemow z cudzysłowami)
+window._agentSessions = [];
+
 async function loadAgentSessions() {
   try {
-    const bf = activeBrandId ? `&brand_id=eq.${activeBrandId}` : '';
-    const r = await fetch(`https://qxsytudsseskvweexznh.supabase.co/rest/v1/script_agent_sessions?order=created_at.desc&limit=20${bf}`, {
+    const bf = activeBrandId ? '&brand_id=eq.' + activeBrandId : '';
+    const r = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/script_agent_sessions?order=created_at.desc&limit=20' + bf, {
       headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
     });
     const sessions = await r.json();
+    window._agentSessions = sessions || [];
     document.getElementById('sa-count').textContent = sessions?.length||0;
     const list = document.getElementById('sa-sessions');
     if (!sessions?.length){list.innerHTML='<div class="empty-state"><div class="empty-icon">🤖</div>Brak sesji.</div>';return;}
-    const cl = {dm_inquiry:'DM',booking_call:'Booking',follow_profile:'Follow',product_purchase:'Zakup',link_click:'Link',save_share:'Udostępnij'};
+    const cl = {dm_inquiry:'DM',booking_call:'Booking',follow_profile:'Follow',product_purchase:'Zakup',link_click:'Link',save_share:'Udostepnij'};
     list.innerHTML = sessions.map((s, i) => {
       const scriptId = 'sa-script-' + i;
       const fullScript = (s.final_script||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const preview = (s.final_script||'').substring(0,140);
       const hasMore = (s.final_script||'').length > 140;
-      return `<div class="sa-session">
-        <div class="sa-session-meta">
-          <span style="font-family:var(--fh);font-weight:700;font-size:11px">${(s.topic||'Sesja').substring(0,60)}</span>
-          <span class="sa-conv-tag">${cl[s.target_conversion]||s.target_conversion||'—'}</span>
-          <span style="font-size:9px;color:var(--muted)">${s.platform||''} · ${new Date(s.created_at).toLocaleDateString('pl-PL')}</span>
-        </div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px">
-          <span id="${scriptId}-preview">${preview}${hasMore?'…':''}</span>
-          <div id="${scriptId}-full" style="display:none;white-space:pre-wrap;color:var(--text)">${fullScript}</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          ${hasMore ? `<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="toggleSession('${scriptId}',this)">ROZWIŃ ↓</button>` : ''}
-          <button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyText(${JSON.stringify(s.final_script||'')})">KOPIUJ</button>
-          <button class="btn btn-sm" style="font-size:9px;background:var(--purple);color:#fff" onclick="loadSessionToAgent(${JSON.stringify(s.final_script||'')})">ZAŁADUJ DO AGENTA</button>
-        </div>
-      </div>`;
+      return '<div class="sa-session">' +
+        '<div class="sa-session-meta">' +
+          '<span style="font-family:var(--fh);font-weight:700;font-size:11px">' + (s.topic||'Sesja').substring(0,60) + '</span>' +
+          '<span class="sa-conv-tag">' + (cl[s.target_conversion]||s.target_conversion||'—') + '</span>' +
+          '<span style="font-size:9px;color:var(--muted)">' + (s.platform||'') + ' · ' + new Date(s.created_at).toLocaleDateString('pl-PL') + '</span>' +
+        '</div>' +
+        '<div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:8px">' +
+          '<span id="' + scriptId + '-preview">' + preview + (hasMore ? '…' : '') + '</span>' +
+          '<div id="' + scriptId + '-full" style="display:none;white-space:pre-wrap;color:var(--text)">' + fullScript + '</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px">' +
+          (hasMore ? '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="toggleSession(this.dataset.id,this)" data-id="' + scriptId + '">ROZWIN</button>' : '') +
+          '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyAgentSession(' + i + ')">KOPIUJ</button>' +
+          '<button class="btn btn-sm" style="font-size:9px;background:var(--purple);color:#fff" onclick="loadSessionToAgent(' + i + ')">ZALADUJ DO AGENTA</button>' +
+        '</div>' +
+      '</div>';
     }).join('');
   } catch(e) { console.error('loadAgentSessions:', e); }
+}
+
+function copyAgentSession(idx) {
+  const s = window._agentSessions[idx];
+  if (s) copyText(s.final_script || '');
 }
 
 function toggleSession(id, btn) {
@@ -1771,12 +1780,32 @@ function toggleSession(id, btn) {
   btn.textContent = isExpanded ? 'ROZWIŃ ↓' : 'ZWIŃ ↑';
 }
 
-function loadSessionToAgent(script) {
-  const el = document.getElementById('sa-script');
-  if (el) { el.className = 'ai-out'; el.textContent = script; }
-  document.getElementById('sa-actions').style.display = 'flex';
+function loadSessionToAgent(idxOrScript) {
+  // Accept either index (number) or script text (string)
+  let script = '';
+  let topic = '';
+  if (typeof idxOrScript === 'number') {
+    const s = (window._agentSessions || [])[idxOrScript];
+    script = s ? (s.final_script || '') : '';
+    topic = s ? (s.topic || '') : '';
+  } else {
+    script = idxOrScript || '';
+  }
+  if (!script) { notify('Brak skryptu do załadowania.'); return; }
+  // First navigate to script-agent page
   navTo('script-agent');
-  notify('✦ Skrypt załadowany do agenta!');
+  // Then set content after short delay (page needs to render)
+  setTimeout(function() {
+    const el = document.getElementById('sa-script');
+    if (el) { el.className = 'ai-out'; el.textContent = script; }
+    const actions = document.getElementById('sa-actions');
+    if (actions) actions.style.display = 'flex';
+    if (topic) {
+      const topicEl = document.getElementById('sa-topic');
+      if (topicEl && !topicEl.value) topicEl.value = topic;
+    }
+    notify('✦ Skrypt załadowany do agenta!');
+  }, 100);
 }
 
 // ── YOUTUBE PREVIEW ──
