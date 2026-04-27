@@ -1026,7 +1026,13 @@ async function api(path, method='GET', body=null) {
 async function syncApi(path, method='GET', body=null) {
   const opts = { method, headers: {'Content-Type':'application/json'} };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(`${SYNC}/${path}`, opts);
+  // Append brand_id to all syncApi calls
+  let fullPath = path;
+  if (activeBrandId) {
+    const sep = fullPath.includes('?') ? '&' : '?';
+    fullPath = fullPath + sep + 'brand_id=' + activeBrandId;
+  }
+  const r = await fetch(`${SYNC}/${fullPath}`, opts);
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
   return r.json();
 }
@@ -1977,13 +1983,15 @@ async function addXPost() {
   const btn = document.getElementById('xpost-add-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> ZAPISUJĘ…';
   try {
-    await syncApi('x/posts', 'POST', {
+    const xPayload = {
       content,
       post_type: xPostType,
       topic: v('xpost-topic') || null,
       likes: parseInt(v('xpost-likes')) || 0,
       notes: v('xpost-notes') || null,
-    });
+    };
+    if (activeBrandId) xPayload.brand_id = activeBrandId;
+    await syncApi('x/posts', 'POST', xPayload);
     ['xpost-content','xpost-topic','xpost-likes','xpost-notes'].forEach(id => {
       const el = document.getElementById(id); if (el) el.value = '';
     });
@@ -1996,6 +2004,7 @@ async function addXPost() {
 async function loadXPosts() {
   try {
     const posts = await syncApi('x/posts');
+    // posts filtered client-side by brand_id
     const tweets = (posts||[]).filter(p => p.post_type === 'tweet');
     const threads = (posts||[]).filter(p => p.post_type === 'thread');
     const tc = document.getElementById('xstyle-tweets-count');
