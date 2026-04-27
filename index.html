@@ -180,6 +180,17 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 .rel-day-header{font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border);}
 .rel-script{font-size:11px;color:var(--text);line-height:1.75;white-space:pre-wrap;}
 
+
+/* ── RATING BUTTONS ── */
+.rating-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.rating-label{font-size:9px;letter-spacing:1.5px;color:var(--muted);font-family:var(--fh);}
+.btn-rate{background:transparent;border:1px solid var(--border2);border-radius:20px;padding:4px 12px;cursor:pointer;font-size:13px;transition:all .12s;color:var(--muted);}
+.btn-rate:hover{transform:scale(1.15);}
+.btn-rate.voted-up{border-color:var(--lime);background:rgba(201,245,60,.12);color:var(--lime);}
+.btn-rate.voted-down{border-color:var(--red);background:rgba(255,77,46,.12);color:var(--red);}
+.rating-note-input{flex:1;background:var(--s2);border:1px solid var(--border2);border-radius:4px;padding:4px 8px;font-size:10px;color:var(--text);font-family:var(--fb);outline:none;}
+.rating-note-input:focus{border-color:rgba(201,245,60,.3);}
+
 /* ── BRAND SWITCHER ── */
 .brand-card{background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:14px 18px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .12s;}
 .brand-card:hover{border-color:var(--lime);background:rgba(201,245,60,.05);}
@@ -1139,6 +1150,12 @@ async function quickScript() {
     const d = await api('scripts/quick','POST',{topic, format:v('q-format'), platform:v('q-platform')});
     out.className='ai-out'; out.textContent=d.text;
     document.getElementById('q-actions').style.display='flex';
+    const qRating = document.getElementById('q-rating-row');
+    if (qRating) qRating.remove();
+    const qDiv = document.createElement('div');
+    qDiv.id = 'q-rating-row';
+    qDiv.innerHTML = ratingRow('script', d.id||'', topic.substring(0,60));
+    document.getElementById('q-out').after(qDiv);
     await loadStats(); await loadRecentScripts();
   } catch(e) { out.className='ai-out'; out.textContent='Błąd: '+e.message; }
   btn.disabled=false; btn.textContent='GENERUJ';
@@ -1624,6 +1641,12 @@ async function runScriptAgent() {
     scriptEl.className='ai-out'; scriptEl.textContent=d.script||'';
     if (d.analysis) { document.getElementById('sa-analysis').textContent=d.analysis; document.getElementById('sa-analysis-card').style.display='block'; }
     document.getElementById('sa-actions').style.display='flex';
+    const saRating = document.getElementById('sa-rating-row');
+    if (saRating) saRating.remove();
+    const saDiv = document.createElement('div');
+    saDiv.id = 'sa-rating-row';
+    saDiv.innerHTML = ratingRow('session', '', v('sa-topic').substring(0,60));
+    document.getElementById('sa-actions').after(saDiv);
     await loadAgentSessions();
   } catch(e) { scriptEl.className='ai-out'; scriptEl.textContent='Błąd: '+e.message; }
   btn.disabled=false; btn.innerHTML='🤖 GENERUJ Z AGENT AI';
@@ -2619,6 +2642,7 @@ async function loadRelationWeek() {
         '<button class="btn btn-sm" style="background:' + d.color + ';font-size:9px" onclick="generateSingleRelation(\'' + d.date + '\',\'' + d.type + '\')">' + (hasScript ? '🔄 REGENERUJ' : '✦ GENERUJ RELACJĘ') + '</button>' +
         (hasScript ? '<button class="btn btn-ghost btn-sm" style="font-size:9px" onclick="copyRelScript(\'' + scriptId + '\')">' + 'KOPIUJ</button>' : '') +
       '</div>' +
+      (hasScript ? ratingRow('relation', plan.id||'', plan.topic||d.date) : '') +
     '</div>';
   }).join('');
 }
@@ -2674,6 +2698,47 @@ async function generateWeekRelations() {
   }
   btn.disabled = false; btn.textContent = '📱 GENERUJ TYDZIEŃ';
 }
+
+// ══ SYSTEM OCEN (👍/👎) ══
+async function rateContent(contentType, contentId, contentRef, rating, btnEl) {
+  try {
+    const noteInput = btnEl.closest('.rating-row')?.querySelector('.rating-note-input');
+    const note = noteInput?.value?.trim() || null;
+    const payload = { content_type: contentType, content_id: contentId, content_ref: contentRef, rating };
+    if (note) payload.note = note;
+    if (activeBrandId) payload.brand_id = activeBrandId;
+    await api('ratings', 'POST', payload);
+    // Update button states
+    const row = btnEl.closest('.rating-row');
+    row?.querySelectorAll('.btn-rate').forEach(b => {
+      b.classList.remove('voted-up','voted-down');
+    });
+    btnEl.classList.add(rating === 1 ? 'voted-up' : 'voted-down');
+    notify(rating === 1 ? '👍 Oceniono pozytywnie — agent zapamiętał!' : '👎 Oceniono negatywnie — agent unika tego stylu.');
+  } catch(e) { notify('Błąd oceny: ' + e.message); }
+}
+
+function ratingRow(contentType, contentId, contentRef) {
+  const safeRef = (contentRef||'').replace(/['"<>]/g,'').substring(0,60);
+  const safeId = (contentId||'').replace(/['"<>]/g,'');
+  const safeType = (contentType||'').replace(/['"<>]/g,'');
+  // Use data attributes to avoid quote conflicts in onclick
+  return '<div class="rating-row" data-type="' + safeType + '" data-id="' + safeId + '" data-ref="' + safeRef + '">' +
+    '<span class="rating-label">OCEŃ:</span>' +
+    '<button class="btn-rate" onclick="doRate(this,1)" title="Dobry kierunek — agent zapamięta">👍</button>' +
+    '<button class="btn-rate" onclick="doRate(this,-1)" title="Zły kierunek — agent unika">👎</button>' +
+    '<input class="rating-note-input" placeholder="Notatka dla agenta..." />' +
+  '</div>';
+}
+
+function doRate(btn, rating) {
+  const row = btn.closest('.rating-row');
+  const contentType = row.dataset.type;
+  const contentId = row.dataset.id;
+  const contentRef = row.dataset.ref;
+  rateContent(contentType, contentId, contentRef, rating, btn);
+}
+
 </script>
 </body>
 </html>
