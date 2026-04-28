@@ -779,7 +779,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
         </div>
         <div class="field" style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
           <label class="label" style="color:var(--gold)">🏆 GENERUJ Z SUKCESU KLIENTA</label>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Wygeneruj post oparty na historii sukcesu klienta — do użycia dowolnego dnia.</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.5">Wybierz klienta → <span style="color:var(--lime)">✦ GENERUJ POMYSŁ</span> użyje jego historii. Bez wyboru — generuje ogólny pomysł.</div>
           <select class="select" id="cal2-success-client-select" style="margin-bottom:8px"><option value="">-- wybierz klienta --</option></select>
           <div class="field">
             <label class="label">FORMAT POSTA</label>
@@ -2327,36 +2327,97 @@ async function loadClientSelectForRelation() {
 async function generateDayIdea() {
   const dateStr = document.getElementById('cal2-detail')?.dataset.date;
   if (!dateStr) { notify('Wybierz dzień!'); return; }
+
+  // Sprawdz czy wybrany klient — jesli tak, uzyj jego historii
+  const clientId = document.getElementById('cal2-success-client-select')?.value || '';
+
   const btn = document.getElementById('cal2-gen-idea-btn');
   const scriptEl = document.getElementById('cal2-script');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> GENERUJĘ...';
   scriptEl.className = 'ai-out loading';
-  scriptEl.textContent = 'AI generuje pomysł dopasowany do Twojej marki...';
 
-  try {
-    const bq = activeBrandId ? '?brand_id=' + activeBrandId : '';
-    const payload = { date: dateStr };
-    if (activeBrandId) payload.brand_id = activeBrandId;
-    const d = await api('calendar-days/refresh-day', 'POST', payload);
-    // Update cache and grid
-    cal2Days[dateStr] = d;
-    renderCalendarGrid(cal2CurrentMonth);
-    // Fill panel
-    const topicEl = document.getElementById('cal2-topic');
-    const descEl = document.getElementById('cal2-desc');
-    if (topicEl) topicEl.value = d.topic || '';
-    if (descEl) descEl.value = d.description || '';
-    // Show generated content
-    scriptEl.className = 'ai-out';
-    let content = '';
-    if (d.hook) content += 'HOOK: ' + d.hook + '\n\n';
-    if (d.topic) content += 'TEMAT: ' + d.topic + '\n\n';
-    if (d.description) content += d.description;
-    scriptEl.textContent = content || 'Pomysł wygenerowany — edytuj temat powyżej i kliknij ZAPISZ.';
-    notify('✦ Pomysł wygenerowany!');
-  } catch(e) {
-    scriptEl.className = 'ai-out';
-    scriptEl.textContent = 'Błąd: ' + e.message;
+  if (clientId) {
+    // Generuj pomysl bazujacy na konkretnym kliencie
+    scriptEl.textContent = 'Agent generuje pomysł oparty na historii wybranego klienta...';
+    try {
+      const bq = activeBrandId ? '?brand_id=' + activeBrandId : '';
+      const clients = await api('clients' + bq).catch(()=>[]);
+      const client = (clients||[]).find(cl => cl.id === clientId);
+      if (!client) throw new Error('Nie znaleziono klienta o id: ' + clientId);
+
+      // Pobierz typ relacji dla tego dnia
+      const detail = document.getElementById('cal2-detail');
+      const relType = detail?.dataset.relationType || 'social_proof';
+      const format = document.getElementById('cal2-success-format')?.value || 'transformation';
+
+      const formatLabels = {
+        case_study: 'CASE STUDY: transformacja zanim/po, konkretne liczby',
+        transformation: 'STORYTELLING TRANSFORMACJI: historia klienta od problemu do wyniku',
+        social_proof: 'SOCIAL PROOF: wyniki, metryki, mocne CTA',
+        testimonial: 'TESTIMONIAL: post zbudowany wokol cytatu klienta',
+      };
+
+      await api('clients/' + clientId + '/use', 'POST', {}).catch(()=>{});
+
+      const payload = {
+        date: dateStr,
+        relation_type: relType,
+        client_id: clientId,
+        custom_format: format,
+        custom_instructions: formatLabels[format] || formatLabels.transformation,
+      };
+      if (activeBrandId) payload.brand_id = activeBrandId;
+
+      const d = await api('relations/generate', 'POST', payload);
+
+      // Aktualizuj cache kalendarza
+      if (d.date) { cal2Days[dateStr] = { ...cal2Days[dateStr], topic: d.topic, description: d.hook }; }
+      renderCalendarGrid(cal2CurrentMonth);
+
+      // Wypelnij formularz
+      const topicEl = document.getElementById('cal2-topic');
+      if (topicEl && d.topic) topicEl.value = d.topic;
+
+      scriptEl.className = 'ai-out';
+      const output = [
+        'KLIENT: ' + client.client_name,
+        'EFEKT: ' + client.result,
+        client.transformation ? 'TRANSFORMACJA: ' + client.transformation : '',
+        '',
+        d.hook ? 'HOOK:\n' + d.hook : '',
+        '',
+        d.script ? 'SKRYPT:\n' + d.script : '',
+      ].filter(Boolean).join('\n');
+      scriptEl.textContent = output;
+      notify('✦ Pomysł z historii ' + client.client_name + ' wygenerowany!');
+    } catch(e) {
+      scriptEl.className = 'ai-out';
+      scriptEl.textContent = 'Błąd: ' + e.message;
+    }
+  } else {
+    // Brak wybranego klienta — generuj ogolny pomysl z AI
+    scriptEl.textContent = 'AI generuje pomysł dopasowany do Twojej marki...';
+    try {
+      const payload = { date: dateStr };
+      if (activeBrandId) payload.brand_id = activeBrandId;
+      const d = await api('calendar-days/refresh-day', 'POST', payload);
+      cal2Days[dateStr] = d;
+      renderCalendarGrid(cal2CurrentMonth);
+      const topicEl = document.getElementById('cal2-topic');
+      const descEl = document.getElementById('cal2-desc');
+      if (topicEl) topicEl.value = d.topic || '';
+      if (descEl) descEl.value = d.description || '';
+      scriptEl.className = 'ai-out';
+      let content = '';
+      if (d.hook) content += 'HOOK: ' + d.hook + '\n\n';
+      if (d.topic) content += 'TEMAT: ' + d.topic + '\n\n';
+      if (d.description) content += d.description;
+      scriptEl.textContent = content || 'Pomysł wygenerowany!';
+      notify('✦ Pomysł wygenerowany!');
+    } catch(e) {
+      scriptEl.className = 'ai-out';
+      scriptEl.textContent = 'Błąd: ' + e.message;
+    }
   }
   btn.disabled = false; btn.textContent = '✦ GENERUJ POMYSŁ';
 }
