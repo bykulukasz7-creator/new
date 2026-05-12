@@ -595,6 +595,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       <div class="flex mt12" id="sa-actions" style="display:none">
         <button class="btn btn-sm" style="background:var(--purple);color:#fff" onclick="copyText(document.getElementById('sa-script').textContent)">KOPIUJ</button>
         <button class="btn btn-ghost btn-sm" onclick="saveAgentScript()">ZAPISZ DO BAZY</button>
+        <button class="btn btn-sm" style="background:#1d9bf0;color:#fff;font-size:9px" onclick="sendToXScheduler()" id="sa-send-x-btn">𝕏 DO SCHEDULERA</button>
+      </div>
+      <!-- X Scheduler quick form -->
+      <div id="sa-x-scheduler-form" style="display:none;margin-top:10px;background:rgba(29,155,240,.07);border:1px solid rgba(29,155,240,.3);border-radius:6px;padding:12px 14px">
+        <div style="font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;color:#1d9bf0;margin-bottom:8px">𝕏 ZAKOLEJKUJ NA X</div>
+        <div class="ir mb8">
+          <div><label class="label">DATA</label><input class="input" type="date" id="sa-x-date"/></div>
+          <div><label class="label">GODZINA</label><input class="input" type="time" id="sa-x-time" value="10:00"/></div>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px" id="sa-x-char-info"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-sm" style="background:#1d9bf0" onclick="confirmSendToX()" id="sa-confirm-x-btn">𝕏 DODAJ DO KOLEJKI</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('sa-x-scheduler-form').style.display='none'">ANULUJ</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1077,6 +1091,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     </div>
   </div>
 
+  <!-- Import z Script Agent -->
+  <div class="card mb16">
+    <div class="card-title">🤖 IMPORTUJ Z SCRIPT AGENT <span class="badge badge-outline" id="sch-scripts-badge">0</span></div>
+    <div style="font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.6">Skrypty wygenerowane w Script Agent (platforma X) — dodaj do kolejki jednym kliknięciem.</div>
+    <div id="sch-scripts-list"><div class="empty-state"><div class="empty-icon">🤖</div>Brak skryptów X do importu. Wygeneruj coś w Script Agent.</div></div>
+  </div>
+
   <!-- Kolejka -->
   <div class="card mb16">
     <div class="card-title">📅 W KOLEJCE <span class="badge badge-outline" id="sch-queue-badge">0</span></div>
@@ -1246,7 +1267,7 @@ function nav(el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+el.dataset.page).classList.add('active');
   el.classList.add('active');
-  if (el.dataset.page === 'scheduler') { loadSchedulerStatus(); setDefaultScheduleTime(); }
+  if (el.dataset.page === 'scheduler') { loadSchedulerStatus(); loadSchedulerScripts(); setDefaultScheduleTime(); }
 }
 function navTo(page) { const el = document.querySelector(`[data-page="${page}"]`); if(el) nav(el); }
 function openSetup() { document.getElementById('setup-overlay').style.display='flex'; }
@@ -3433,6 +3454,111 @@ async function deleteCalendarPost(postId, dateStr) {
     headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' },
   });
   await loadDayPosts(dateStr);
+}
+
+
+// ══ SCRIPT AGENT → X SCHEDULER INTEGRATION ══
+
+function sendToXScheduler() {
+  const scriptEl = document.getElementById('sa-script');
+  const text = scriptEl?.textContent?.trim() || '';
+  if (!text || text.includes('Wpisz temat')) { notify('Najpierw wygeneruj skrypt!'); return; }
+
+  const form = document.getElementById('sa-x-scheduler-form');
+  const charInfo = document.getElementById('sa-x-char-info');
+  const len = text.length;
+  if (charInfo) {
+    charInfo.textContent = len + ' / 280 znaków' + (len > 280 ? ' ⚠ ZA DŁUGI — zostanie skrócony do 280' : ' ✓');
+    charInfo.style.color = len > 280 ? 'var(--gold)' : 'var(--lime)';
+  }
+  // Ustaw domyślną datę na jutro
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const dateEl = document.getElementById('sa-x-date');
+  if (dateEl && !dateEl.value) dateEl.value = tomorrow.toISOString().split('T')[0];
+
+  form.style.display = 'block';
+}
+
+async function confirmSendToX() {
+  const scriptEl = document.getElementById('sa-script');
+  const rawText = scriptEl?.textContent?.trim() || '';
+  if (!rawText) { notify('Brak treści!'); return; }
+
+  const dateVal = document.getElementById('sa-x-date')?.value;
+  const timeVal = document.getElementById('sa-x-time')?.value || '10:00';
+  if (!dateVal) { notify('Wybierz datę!'); return; }
+
+  const content = rawText.substring(0, 280);
+  const scheduledAt = new Date(dateVal + 'T' + timeVal + ':00').toISOString();
+
+  const btn = document.getElementById('sa-confirm-x-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> KOLEJKUJĘ...';
+
+  try {
+    await schedulerApi('posts', 'POST', { content, scheduled_at: scheduledAt, source: 'script_agent' });
+    document.getElementById('sa-x-scheduler-form').style.display = 'none';
+    notify('✦ Zakolejkowano na X na ' + dateVal + ' o ' + timeVal + '!');
+    // Odswiez liste scriptow w schedulerze jesli jest otwarty
+    const schPage = document.getElementById('page-scheduler');
+    if (schPage && schPage.classList.contains('active')) loadSchedulerScripts();
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '𝕏 DODAJ DO KOLEJKI';
+}
+
+// Ładuje skrypty X z bazy do sekcji importu w Schedulerze
+async function loadSchedulerScripts() {
+  const el = document.getElementById('sch-scripts-list');
+  const badge = document.getElementById('sch-scripts-badge');
+  if (!el) return;
+
+  try {
+    const bf = activeBrandId ? '?brand_id=eq.' + activeBrandId + '&' : '?';
+    // Pobierz skrypty z platformą X lub wygenerowane przez script_agent
+    const r = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/scripts' + bf + 'or=(platform.eq.X,source.eq.script_agent)&order=created_at.desc&limit=20', {
+      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
+    });
+    const scripts = await r.json();
+    if (badge) badge.textContent = scripts?.length || 0;
+    if (!scripts?.length) {
+      el.innerHTML = '<div class="empty-state"><div class="empty-icon">🤖</div>Brak skryptów X. Wygeneruj w Script Agent z platformą X.</div>';
+      return;
+    }
+    // Store scripts for quick-queue
+    window._schedulerScripts = scripts;
+    el.innerHTML = scripts.map((s, i) => {
+      const preview = (s.hook || s.full_text || s.title || '').substring(0, 100);
+      const len = (s.full_text || '').length;
+      const tooLong = len > 280;
+      return '<div style="border:1px solid var(--border2);border-radius:6px;padding:11px 13px;margin-bottom:7px;background:var(--s2)">' +
+        '<div style="display:flex;align-items:flex-start;gap:10px">' +
+          '<div style="flex:1">' +
+            '<div style="font-size:11px;color:var(--text);line-height:1.55;margin-bottom:5px">' + preview + (preview.length < (s.full_text||'').length ? '…' : '') + '</div>' +
+            '<div style="font-size:9px;color:var(--muted)">' + (s.platform||'') + ' · ' + new Date(s.created_at).toLocaleDateString('pl-PL') + (tooLong ? ' · <span style="color:var(--gold)">⚠ ' + len + ' znaków — za długi na 1 tweet</span>' : ' · ' + len + ' znaków') + '</div>' +
+          '</div>' +
+          '<button class="btn btn-sm" style="background:#1d9bf0;font-size:9px;flex-shrink:0;white-space:nowrap" onclick="quickQueueScript(' + i + ')" ' + (tooLong ? 'style="background:#1d9bf0;opacity:.6"' : '') + '>𝕏 KOLEJKUJ</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) { console.error('loadSchedulerScripts:', e); }
+}
+
+async function quickQueueScript(idx) {
+  const s = (window._schedulerScripts || [])[idx];
+  if (!s) return;
+  const content = (s.full_text || s.hook || '').substring(0, 280);
+  if (!content) { notify('Brak treści w skrypcie!'); return; }
+
+  const dateStr = prompt('Data publikacji (YYYY-MM-DD):', new Date(Date.now()+86400000).toISOString().split('T')[0]);
+  if (!dateStr) return;
+  const timeStr = prompt('Godzina (HH:MM):', '10:00');
+  if (!timeStr) return;
+
+  try {
+    const scheduledAt = new Date(dateStr + 'T' + timeStr + ':00').toISOString();
+    await schedulerApi('posts', 'POST', { content, scheduled_at: scheduledAt, source: 'script_agent' });
+    await loadSchedulerStatus();
+    notify('✦ Zakolejkowano na ' + dateStr + ' o ' + timeStr + '!');
+  } catch(e) { notify('Błąd: ' + e.message); }
 }
 
 </script>
