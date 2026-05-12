@@ -796,7 +796,29 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       </div>
       <div>
         <div class="label" style="margin-bottom:8px">WYGENEROWANY SKRYPT / NOTATKI</div>
-        <div class="ai-out" id="cal2-script" style="min-height:180px;font-size:11px">Kliknij "Odśwież pomysł" lub "Generuj relację"...</div>
+        <div class="ai-out" id="cal2-script" style="min-height:120px;font-size:11px">Kliknij "Generuj pomysł" lub "Generuj relację"...</div>
+        <div class="flex mt8" id="cal2-post-actions" style="display:none">
+          <button class="btn btn-ghost btn-sm" onclick="addPostToDay()" id="cal2-add-post-btn">+ DODAJ DO LISTY</button>
+          <button class="btn btn-sm" style="background:#1d9bf0;font-size:9px" onclick="queuePostForX()" id="cal2-queue-x-btn" style="display:none">𝕏 KOLEJKUJ NA X</button>
+        </div>
+
+        <!-- Lista postów na ten dzień -->
+        <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:14px">
+          <div style="font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;color:var(--muted);margin-bottom:10px">ZAPLANOWANE NA TEN DZIEŃ</div>
+          <div id="cal2-day-posts"><div style="font-size:10px;color:var(--muted2);font-style:italic">Brak zaplanowanych postów.</div></div>
+          <button class="btn btn-ghost btn-sm mt8" style="font-size:9px;width:100%" onclick="addManualPost()">+ DODAJ POST RĘCZNIE</button>
+        </div>
+
+        <!-- Formularz kolejkowania na X -->
+        <div id="cal2-x-queue-form" style="display:none;margin-top:12px;background:rgba(29,155,240,.06);border:1px solid rgba(29,155,240,.3);border-radius:6px;padding:12px">
+          <div style="font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;color:#1d9bf0;margin-bottom:8px">𝕏 KOLEJKUJ NA X (@TESTOSTEREG)</div>
+          <div class="field"><label class="label">GODZINA PUBLIKACJI</label><input class="input" type="time" id="cal2-x-time" value="10:00"/></div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px" id="cal2-x-char-count">0 / 280 znaków</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" style="background:#1d9bf0" onclick="confirmQueueX()" id="cal2-confirm-x-btn">𝕏 DODAJ DO KOLEJKI X</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cal2-x-queue-form').style.display='none'">ANULUJ</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -2417,6 +2439,18 @@ function selectDay(dateStr) {
   loadClientSelectForRelation();
   document.getElementById('cal2-detail').dataset.date = dateStr;
   document.getElementById('cal2-detail').dataset.relationType = day.relation_type || (dow===5?'soft_sell':dow===6?'value':'social_proof');
+
+  // Pokaż przyciski akcji dla skryptu
+  document.getElementById('cal2-post-actions').style.display = 'none';
+  document.getElementById('cal2-x-queue-form').style.display = 'none';
+
+  // Załaduj posty zaplanowane na ten dzień
+  loadDayPosts(dateStr);
+
+  // Pokaż przycisk X tylko dla platformy X
+  const platform = day.platform || 'IG';
+  const queueXBtn = document.getElementById('cal2-queue-x-btn');
+  if (queueXBtn) queueXBtn.style.display = platform === 'X' ? 'inline-flex' : 'none';
 }
 
 async function loadClientSelectForRelation() {
@@ -3229,6 +3263,176 @@ function setDefaultScheduleTime() {
   const el2 = document.getElementById('sch-ai-datetime');
   if (el1) el1.value = fmt;
   if (el2) el2.value = fmt;
+}
+
+
+// ══ CALENDAR POSTS (multi-post per day) ══
+
+async function loadDayPosts(dateStr) {
+  const bq = activeBrandId ? '?brand_id=eq.' + activeBrandId + '&' : '?';
+  try {
+    const r = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts' + bq + 'date=eq.' + dateStr + '&order=created_at.asc', {
+      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
+    });
+    const posts = await r.json();
+    renderDayPosts(posts || [], dateStr);
+  } catch(e) { console.error('loadDayPosts:', e); }
+}
+
+function renderDayPosts(posts, dateStr) {
+  const el = document.getElementById('cal2-day-posts');
+  if (!el) return;
+  if (!posts.length) {
+    el.innerHTML = '<div style="font-size:10px;color:var(--muted2);font-style:italic">Brak zaplanowanych postów na ten dzień.</div>';
+    return;
+  }
+  const platformColors = { X:'#1d9bf0', IG:'#c13584', TikTok:'var(--cyan)', YT:'var(--red)', IG_Story:'#e1306c' };
+  el.innerHTML = posts.map((p, i) => {
+    const col = platformColors[p.platform] || 'var(--muted)';
+    const isX = p.platform === 'X';
+    const statusIcon = p.status === 'published' ? '✓' : p.status === 'scheduled' ? '📅' : '○';
+    const statusColor = p.status === 'published' ? 'var(--lime)' : p.status === 'scheduled' ? '#1d9bf0' : 'var(--muted)';
+    return '<div style="border:1px solid var(--border2);border-radius:5px;padding:10px 12px;margin-bottom:6px;background:var(--s1)">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">' +
+        '<span style="font-size:9px;font-weight:700;font-family:var(--fh);color:' + col + ';border:1px solid ' + col + ';padding:1px 7px;border-radius:10px">' + p.platform + '</span>' +
+        '<span style="font-size:9px;color:' + statusColor + '">' + statusIcon + ' ' + (p.status==='published'?'Opublikowano':p.status==='scheduled'?'W kolejce':'Szkic') + '</span>' +
+        '<span style="margin-left:auto;display:flex;gap:5px">' +
+          (isX && p.status === 'draft' ? '<button class="btn btn-sm" style="font-size:8px;padding:3px 8px;background:#1d9bf0" onclick="queueExistingPost(this.dataset.pid,this.dataset.date)" data-pid="' + p.id + '" data-date="' + dateStr + '">𝕏 KOLEJKUJ</button>' : '') +
+          '<button class="btn btn-ghost btn-sm" style="font-size:8px;padding:3px 8px;border-color:rgba(255,77,46,.3);color:var(--red)" onclick="deleteCalendarPost(this.dataset.pid,this.dataset.date)" data-pid="' + p.id + '" data-date="' + dateStr + '">✕</button>' +
+        '</span>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--text);line-height:1.5">' + (p.title || p.content || '').substring(0, 120) + ((p.content||'').length > 120 ? '…' : '') + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function addPostToDay() {
+  const dateStr = document.getElementById('cal2-detail')?.dataset.date;
+  const scriptEl = document.getElementById('cal2-script');
+  const content = scriptEl?.textContent?.trim();
+  if (!content || content.includes('Kliknij')) { notify('Najpierw wygeneruj treść!'); return; }
+
+  const platform = document.getElementById('cal2-platform')?.value || 'IG';
+  const title = document.getElementById('cal2-topic')?.value?.trim() || '';
+  const isX = platform === 'X';
+
+  const payload = {
+    date: dateStr, platform, title, content,
+    content_type: isX ? 'tweet' : 'post',
+    status: 'draft', source: 'calendar',
+  };
+  if (activeBrandId) payload.brand_id = activeBrandId;
+
+  try {
+    await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts', {
+      method: 'POST',
+      headers: {
+        apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150',
+        'Content-Type': 'application/json', Prefer: 'return=representation',
+      },
+      body: JSON.stringify(payload),
+    });
+    await loadDayPosts(dateStr);
+    notify('✦ Post dodany do listy dnia!');
+
+    // Jesli platforma X — od razu pokaż formularz kolejkowania
+    if (isX) showXQueueForm(content);
+  } catch(e) { notify('Błąd: ' + e.message); }
+}
+
+async function addManualPost() {
+  const dateStr = document.getElementById('cal2-detail')?.dataset.date;
+  if (!dateStr) return;
+  const content = prompt('Wpisz treść posta:');
+  if (!content?.trim()) return;
+  const platform = prompt('Platforma (X, IG, TikTok, YT):') || 'IG';
+  const payload = { date: dateStr, platform: platform.trim().toUpperCase(), content: content.trim(), status: 'draft', source: 'manual' };
+  if (activeBrandId) payload.brand_id = activeBrandId;
+  try {
+    await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts', {
+      method: 'POST',
+      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150', 'Content-Type': 'application/json', Prefer: 'return=representation' },
+      body: JSON.stringify(payload),
+    });
+    await loadDayPosts(dateStr);
+    notify('✦ Post dodany!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+}
+
+let _xQueueContent = '';
+function showXQueueForm(content) {
+  _xQueueContent = content || document.getElementById('cal2-script')?.textContent?.trim() || '';
+  const charCount = document.getElementById('cal2-x-char-count');
+  if (charCount) charCount.textContent = _xQueueContent.length + ' / 280 znaków' + (_xQueueContent.length > 280 ? ' — ZA DŁUGI!' : '');
+  document.getElementById('cal2-x-queue-form').style.display = 'block';
+  document.getElementById('cal2-post-actions').style.display = 'flex';
+}
+
+function queuePostForX() {
+  const content = document.getElementById('cal2-script')?.textContent?.trim();
+  if (!content || content.includes('Kliknij')) { notify('Najpierw wygeneruj treść!'); return; }
+  showXQueueForm(content);
+}
+
+async function confirmQueueX() {
+  const dateStr = document.getElementById('cal2-detail')?.dataset.date;
+  const time = document.getElementById('cal2-x-time')?.value || '10:00';
+  if (!_xQueueContent) { notify('Brak treści do kolejkowania!'); return; }
+  if (_xQueueContent.length > 280) { notify('Tweet za długi! Max 280 znaków.'); return; }
+
+  const scheduledAt = new Date(dateStr + 'T' + time + ':00').toISOString();
+  const btn = document.getElementById('cal2-confirm-x-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> KOLEJKUJĘ...';
+
+  try {
+    const result = await schedulerApi('posts', 'POST', { content: _xQueueContent, scheduled_at: scheduledAt, source: 'calendar' });
+    // Oznacz post w calendar_posts jako scheduled
+    const posts = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts?date=eq.' + dateStr + '&platform=eq.X&status=eq.draft&limit=1', {
+      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
+    }).then(r => r.json()).catch(() => []);
+    if (posts?.length && result?.id) {
+      await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts?id=eq.' + posts[0].id, {
+        method: 'PATCH',
+        headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'scheduled', scheduled_post_id: result.id }),
+      });
+    }
+    document.getElementById('cal2-x-queue-form').style.display = 'none';
+    await loadDayPosts(dateStr);
+    notify('✦ Tweet zakolejkowany na ' + time + '!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '𝕏 DODAJ DO KOLEJKI X';
+}
+
+async function queueExistingPost(postId, dateStr) {
+  const time = prompt('Godzina publikacji (np. 10:00):', '10:00');
+  if (!time) return;
+  const posts = await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts?id=eq.' + postId + '&limit=1', {
+    headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' }
+  }).then(r => r.json()).catch(() => []);
+  const post = posts?.[0];
+  if (!post?.content) { notify('Nie znaleziono posta'); return; }
+  if (post.content.length > 280) { notify('Tweet za długi (' + post.content.length + ' znaków). Skróć go najpierw.'); return; }
+  const scheduledAt = new Date(dateStr + 'T' + time + ':00').toISOString();
+  try {
+    const result = await schedulerApi('posts', 'POST', { content: post.content, scheduled_at: scheduledAt, source: 'calendar' });
+    await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts?id=eq.' + postId, {
+      method: 'PATCH',
+      headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'scheduled', scheduled_post_id: result.id }),
+    });
+    await loadDayPosts(dateStr);
+    notify('✦ Zakolejkowano na ' + time + '!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+}
+
+async function deleteCalendarPost(postId, dateStr) {
+  if (!confirm('Usunąć ten post?')) return;
+  await fetch('https://qxsytudsseskvweexznh.supabase.co/rest/v1/calendar_posts?id=eq.' + postId, {
+    method: 'DELETE',
+    headers: { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF4c3l0dWRzc2Vza3Z3ZWV4em5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5NDUxMTgsImV4cCI6MjA5MTUyMTExOH0.XGbD1IIQ2VKy7G7Nqg59W4y1ap14TD63K9-s-mO8150' },
+  });
+  await loadDayPosts(dateStr);
 }
 
 </script>
