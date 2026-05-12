@@ -591,9 +591,14 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     </div>
     <div class="card">
       <div class="card-title">WYGENEROWANY SKRYPT</div>
-      <div class="ai-out" id="sa-script" style="min-height:220px">Wpisz temat i kliknij generuj...</div>
+      <div style="position:relative">
+        <textarea class="ai-out" id="sa-script" style="min-height:220px;resize:vertical;width:100%;font-family:var(--fb);font-size:12px;line-height:1.75;cursor:text" readonly>Wpisz temat i kliknij generuj...</textarea>
+        <div id="sa-edit-toolbar" style="display:none;position:absolute;top:8px;right:8px;display:none;gap:5px">
+          <button class="btn btn-ghost btn-sm" style="font-size:9px;padding:3px 9px;background:var(--s1)" onclick="toggleEditScript()" id="sa-edit-btn">✏ EDYTUJ</button>
+        </div>
+      </div>
       <div class="flex mt12" id="sa-actions" style="display:none">
-        <button class="btn btn-sm" style="background:var(--purple);color:#fff" onclick="copyText(document.getElementById('sa-script').textContent)">KOPIUJ</button>
+        <button class="btn btn-sm" style="background:var(--purple);color:#fff" onclick="copyText(document.getElementById('sa-script').value)">KOPIUJ</button>
         <button class="btn btn-ghost btn-sm" onclick="saveAgentScript()">ZAPISZ DO BAZY</button>
         <button class="btn btn-sm" style="background:#1d9bf0;color:#fff;font-size:9px" onclick="sendToXScheduler()" id="sa-send-x-btn">𝕏 DO SCHEDULERA</button>
       </div>
@@ -827,7 +832,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
         <div id="cal2-x-queue-form" style="display:none;margin-top:12px;background:rgba(29,155,240,.06);border:1px solid rgba(29,155,240,.3);border-radius:6px;padding:12px">
           <div style="font-family:var(--fh);font-size:9px;font-weight:700;letter-spacing:2px;color:#1d9bf0;margin-bottom:8px">𝕏 KOLEJKUJ NA X (@TESTOSTEREG)</div>
           <div class="field"><label class="label">GODZINA PUBLIKACJI</label><input class="input" type="time" id="cal2-x-time" value="10:00"/></div>
-          <div style="font-size:10px;color:var(--muted);margin-bottom:8px" id="cal2-x-char-count">0 / 280 znaków</div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:8px" id="cal2-x-char-count">0 / 25 000 znaków</div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-sm" style="background:#1d9bf0" onclick="confirmQueueX()" id="cal2-confirm-x-btn">𝕏 DODAJ DO KOLEJKI X</button>
             <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cal2-x-queue-form').style.display='none'">ANULUJ</button>
@@ -1063,7 +1068,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       <div class="field">
         <label class="label">TREŚĆ TWEETA</label>
         <textarea class="textarea" id="sch-content" rows="4" placeholder="Wpisz treść tweeta..." oninput="updateCharCount()"></textarea>
-        <div style="text-align:right;font-size:10px;margin-top:4px" id="sch-char-count" style="color:var(--muted)">0 / 280</div>
+        <div style="text-align:right;font-size:10px;margin-top:4px" id="sch-char-count" style="color:var(--muted)">0 / 25 000</div>
       </div>
       <div class="field">
         <label class="label">DATA I GODZINA PUBLIKACJI</label>
@@ -1081,7 +1086,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
       <div class="field"><label class="label">TEMAT</label><textarea class="textarea" id="sch-ai-topic" rows="2" placeholder="np. dlaczego większość twórców nigdy nie zarobi na contencie..."></textarea></div>
       <div class="field"><label class="label">FORMAT</label>
         <select class="select" id="sch-ai-format">
-          <option value="tweet">Pojedynczy tweet (max 280)</option>
+          <option value="tweet">Pojedynczy tweet (X Premium)</option>
           <option value="hook">Tylko hook — pierwsze zdanie</option>
         </select>
       </div>
@@ -1799,12 +1804,12 @@ async function runScriptAgent() {
 
   if (isCarousel) {
     scriptEl.className='ai-out loading';
-    scriptEl.textContent='Agent generuje karuzele slajd po slajdzie...';
+    scriptEl.readOnly=true; scriptEl.value='Agent generuje karuzele slajd po slajdzie...';
     try {
       const sc = parseInt(document.getElementById('sa-slide-count')?.value||'7');
       const vs = document.getElementById('sa-visual-style')?.value?.trim()||'';
       const d = await syncApi('script-agent/carousel','POST',{topic,platform:v('sa-platform'),target_conversion:v('sa-conversion'),slide_count:sc,visual_style:vs});
-      scriptEl.className='ai-out';
+      scriptEl.className='ai-out'; scriptEl.readOnly=true;
       if (d.slides && d.slides.length) {
         let out = 'KARUZELA x ' + d.slide_count + ' SLAJDOW\n' + '='.repeat(40) + '\n\n';
         d.slides.forEach(function(slide,i){
@@ -1814,8 +1819,8 @@ async function runScriptAgent() {
           if(slide.visual) out += 'VISUAL: ' + slide.visual + '\n';
           out += '\n';
         });
-        scriptEl.textContent = out;
-      } else { scriptEl.textContent = d.text || ''; }
+        scriptEl.value = out; showEditToolbar();
+      } else { scriptEl.value = d.text || ''; showEditToolbar(); }
       document.getElementById('sa-actions').style.display='flex';
       if (d.text) {
         const ac = document.getElementById('sa-analysis-card');
@@ -1825,12 +1830,12 @@ async function runScriptAgent() {
         if (ac) ac.style.display='block';
       }
       await loadAgentSessions();
-    } catch(e) { scriptEl.className='ai-out'; scriptEl.textContent='Blad: '+e.message; }
+    } catch(e) { scriptEl.className='ai-out'; scriptEl.readOnly=true; scriptEl.value='Blad: '+e.message; }
   } else {
-    scriptEl.className='ai-out loading'; scriptEl.textContent='Agent czyta cala Twoja baze wiedzy...';
+    scriptEl.className='ai-out loading'; scriptEl.readOnly=true; scriptEl.value='Agent czyta cala Twoja baze wiedzy...';
     try {
       const d = await syncApi('script-agent/generate','POST',{topic,platform:v('sa-platform'),format,target_conversion:v('sa-conversion')});
-      scriptEl.className='ai-out'; scriptEl.textContent=d.script||'';
+      scriptEl.className='ai-out'; scriptEl.readOnly=true; scriptEl.value=d.script||''; showEditToolbar();
       if(d.analysis){document.getElementById('sa-analysis').textContent=d.analysis;document.getElementById('sa-analysis-card').style.display='block';}
       document.getElementById('sa-actions').style.display='flex';
       const sr=document.getElementById('sa-rating-row'); if(sr) sr.remove();
@@ -1844,7 +1849,7 @@ async function runScriptAgent() {
 }
 
 async function saveAgentScript() {
-  const text = document.getElementById('sa-script').textContent;
+  const text = document.getElementById('sa-script').value;
   if (!text || text.includes('Wpisz temat')) return;
   await api('knowledge','POST',{category:'🎯 Udany skrypt',content:text,source:'script_agent'});
   notify('✦ Skrypt zapisany do bazy wiedzy!');
@@ -2099,7 +2104,7 @@ function setXPostType(type, el) {
   const ta = document.getElementById('xpost-content');
   if (ta) ta.placeholder = type === 'thread'
     ? 'Wklej cały wątek:\n\n1/ Pierwsza myśl rozwinięta w kilka zdań...\n\n2/ Druga myśl...\n\n3/ ...'
-    : 'Wklej swój tweet (max 280 znaków)...';
+    : 'Wklej swój wpis na X...';
 }
 
 async function addXPost() {
@@ -3137,7 +3142,7 @@ function renderQueue(posts) {
         '</span>' +
       '</div>' +
       '<div style="font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap">' + p.content + '</div>' +
-      '<div style="font-size:9px;color:var(--muted);margin-top:6px">' + p.content.length + ' / 280 znaków</div>' +
+      '<div style="font-size:9px;color:var(--muted);margin-top:6px">' + p.content.length + ' znaków</div>' +
     '</div>';
   }).join('');
 }
@@ -3169,8 +3174,8 @@ function updateCharCount() {
   const cnt = document.getElementById('sch-char-count');
   if (!el || !cnt) return;
   const len = el.value.length;
-  cnt.textContent = len + ' / 280';
-  cnt.style.color = len > 260 ? 'var(--red)' : len > 240 ? 'var(--gold)' : 'var(--muted)';
+  cnt.textContent = len + ' / 25 000';
+  cnt.style.color = len > 24000 ? 'var(--red)' : len > 20000 ? 'var(--gold)' : 'var(--muted)';
 }
 
 async function addToQueue() {
@@ -3178,7 +3183,7 @@ async function addToQueue() {
   const dt = document.getElementById('sch-datetime')?.value;
   if (!content) { notify('Wpisz treść tweeta!'); return; }
   if (!dt) { notify('Wybierz datę i godzinę!'); return; }
-  if (content.length > 280) { notify('Tweet za długi! Max 280 znaków.'); return; }
+  
   const btn = document.getElementById('sch-add-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span> DODAJĘ...';
   try {
@@ -3194,7 +3199,7 @@ async function addToQueue() {
 async function publishNowDirect() {
   const content = document.getElementById('sch-content')?.value?.trim();
   if (!content) { notify('Wpisz treść tweeta!'); return; }
-  if (content.length > 280) { notify('Tweet za długi!'); return; }
+  
   if (!confirm('Opublikować ten tweet natychmiast na @testostereg?')) return;
   const btn = document.getElementById('sch-now-btn');
   btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
@@ -3227,7 +3232,7 @@ async function generateAndQueue() {
     const d = await syncApi('script-agent/generate', 'POST', {
       topic, platform: 'X (Twitter)', format: 'Pojedynczy tweet', target_conversion: 'follow_profile'
     });
-    const tweetText = (d.script || '').substring(0, 280);
+    const tweetText = (d.script || '');
     preview.className = 'ai-out mt12';
     preview.textContent = tweetText;
     // Dodaj do kolejki
@@ -3384,7 +3389,7 @@ let _xQueueContent = '';
 function showXQueueForm(content) {
   _xQueueContent = content || document.getElementById('cal2-script')?.textContent?.trim() || '';
   const charCount = document.getElementById('cal2-x-char-count');
-  if (charCount) charCount.textContent = _xQueueContent.length + ' / 280 znaków' + (_xQueueContent.length > 280 ? ' — ZA DŁUGI!' : '');
+  if (charCount) charCount.textContent = _xQueueContent.length + ' znaków';
   document.getElementById('cal2-x-queue-form').style.display = 'block';
   document.getElementById('cal2-post-actions').style.display = 'flex';
 }
@@ -3399,7 +3404,7 @@ async function confirmQueueX() {
   const dateStr = document.getElementById('cal2-detail')?.dataset.date;
   const time = document.getElementById('cal2-x-time')?.value || '10:00';
   if (!_xQueueContent) { notify('Brak treści do kolejkowania!'); return; }
-  if (_xQueueContent.length > 280) { notify('Tweet za długi! Max 280 znaków.'); return; }
+  
 
   const scheduledAt = new Date(dateStr + 'T' + time + ':00').toISOString();
   const btn = document.getElementById('cal2-confirm-x-btn');
@@ -3433,7 +3438,7 @@ async function queueExistingPost(postId, dateStr) {
   }).then(r => r.json()).catch(() => []);
   const post = posts?.[0];
   if (!post?.content) { notify('Nie znaleziono posta'); return; }
-  if (post.content.length > 280) { notify('Tweet za długi (' + post.content.length + ' znaków). Skróć go najpierw.'); return; }
+  
   const scheduledAt = new Date(dateStr + 'T' + time + ':00').toISOString();
   try {
     const result = await schedulerApi('posts', 'POST', { content: post.content, scheduled_at: scheduledAt, source: 'calendar' });
@@ -3461,15 +3466,15 @@ async function deleteCalendarPost(postId, dateStr) {
 
 function sendToXScheduler() {
   const scriptEl = document.getElementById('sa-script');
-  const text = scriptEl?.textContent?.trim() || '';
+  const text = scriptEl?.value?.trim() || '';
   if (!text || text.includes('Wpisz temat')) { notify('Najpierw wygeneruj skrypt!'); return; }
 
   const form = document.getElementById('sa-x-scheduler-form');
   const charInfo = document.getElementById('sa-x-char-info');
   const len = text.length;
   if (charInfo) {
-    charInfo.textContent = len + ' / 280 znaków' + (len > 280 ? ' ⚠ ZA DŁUGI — zostanie skrócony do 280' : ' ✓');
-    charInfo.style.color = len > 280 ? 'var(--gold)' : 'var(--lime)';
+    charInfo.textContent = len + ' znaków';
+    charInfo.style.color = 'var(--lime)';
   }
   // Ustaw domyślną datę na jutro
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
@@ -3481,14 +3486,14 @@ function sendToXScheduler() {
 
 async function confirmSendToX() {
   const scriptEl = document.getElementById('sa-script');
-  const rawText = scriptEl?.textContent?.trim() || '';
+  const rawText = scriptEl?.value?.trim() || '';
   if (!rawText) { notify('Brak treści!'); return; }
 
   const dateVal = document.getElementById('sa-x-date')?.value;
   const timeVal = document.getElementById('sa-x-time')?.value || '10:00';
   if (!dateVal) { notify('Wybierz datę!'); return; }
 
-  const content = rawText.substring(0, 280);
+  const content = rawText;
   const scheduledAt = new Date(dateVal + 'T' + timeVal + ':00').toISOString();
 
   const btn = document.getElementById('sa-confirm-x-btn');
@@ -3528,12 +3533,12 @@ async function loadSchedulerScripts() {
     el.innerHTML = scripts.map((s, i) => {
       const preview = (s.hook || s.full_text || s.title || '').substring(0, 100);
       const len = (s.full_text || '').length;
-      const tooLong = len > 280;
+      const tooLong = false; // X Premium - brak limitu
       return '<div style="border:1px solid var(--border2);border-radius:6px;padding:11px 13px;margin-bottom:7px;background:var(--s2)">' +
         '<div style="display:flex;align-items:flex-start;gap:10px">' +
           '<div style="flex:1">' +
             '<div style="font-size:11px;color:var(--text);line-height:1.55;margin-bottom:5px">' + preview + (preview.length < (s.full_text||'').length ? '…' : '') + '</div>' +
-            '<div style="font-size:9px;color:var(--muted)">' + (s.platform||'') + ' · ' + new Date(s.created_at).toLocaleDateString('pl-PL') + (tooLong ? ' · <span style="color:var(--gold)">⚠ ' + len + ' znaków — za długi na 1 tweet</span>' : ' · ' + len + ' znaków') + '</div>' +
+            '<div style="font-size:9px;color:var(--muted)">' + (s.platform||'') + ' · ' + new Date(s.created_at).toLocaleDateString('pl-PL') + ' · ' + len + ' znaków' + '</div>' +
           '</div>' +
           '<button class="btn btn-sm" style="background:#1d9bf0;font-size:9px;flex-shrink:0;white-space:nowrap" onclick="quickQueueScript(' + i + ')" ' + (tooLong ? 'style="background:#1d9bf0;opacity:.6"' : '') + '>𝕏 KOLEJKUJ</button>' +
         '</div>' +
@@ -3545,7 +3550,7 @@ async function loadSchedulerScripts() {
 async function quickQueueScript(idx) {
   const s = (window._schedulerScripts || [])[idx];
   if (!s) return;
-  const content = (s.full_text || s.hook || '').substring(0, 280);
+  const content = (s.full_text || s.hook || '');
   if (!content) { notify('Brak treści w skrypcie!'); return; }
 
   const dateStr = prompt('Data publikacji (YYYY-MM-DD):', new Date(Date.now()+86400000).toISOString().split('T')[0]);
@@ -3559,6 +3564,38 @@ async function quickQueueScript(idx) {
     await loadSchedulerStatus();
     notify('✦ Zakolejkowano na ' + dateStr + ' o ' + timeStr + '!');
   } catch(e) { notify('Błąd: ' + e.message); }
+}
+
+
+// ══ SCRIPT EDITOR ══
+function showEditToolbar() {
+  const toolbar = document.getElementById('sa-edit-toolbar');
+  if (toolbar) toolbar.style.display = 'flex';
+}
+
+function toggleEditScript() {
+  const el = document.getElementById('sa-script');
+  const btn = document.getElementById('sa-edit-btn');
+  if (!el || !btn) return;
+  const isEditing = !el.readOnly;
+  if (isEditing) {
+    // Zapisz zmiany
+    el.readOnly = true;
+    el.style.borderColor = '';
+    el.style.background = '';
+    btn.textContent = '✏ EDYTUJ';
+    btn.style.color = '';
+    notify('✦ Zmiany zapisane!');
+  } else {
+    // Wejdź w tryb edycji
+    el.readOnly = false;
+    el.style.borderColor = 'rgba(201,245,60,.5)';
+    el.style.background = 'var(--s2)';
+    el.style.cursor = 'text';
+    el.focus();
+    btn.textContent = '✓ ZAPISZ';
+    btn.style.color = 'var(--lime)';
+  }
 }
 
 </script>
