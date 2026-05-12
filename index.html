@@ -241,6 +241,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
     <div class="nav-item" data-page="clients" onclick="nav(this)"><span class="nav-icon">🏆</span>Sukcesy Klientów<span class="nav-badge" style="background:var(--gold)">NEW</span></div>
     <div class="nav-item" data-page="relations" onclick="nav(this)"><span class="nav-icon">📱</span>Planer Relacji<span class="nav-badge" style="background:var(--red)">Pt/Sb/Nd</span></div>
     <div class="nav-item" data-page="agent" onclick="nav(this)"><span class="nav-icon">🧠</span>Knowledge Agent</div>
+    <div class="nav-item" data-page="scheduler" onclick="nav(this)"><span class="nav-icon">📅</span>X Scheduler<span class="nav-badge" style="background:#1d9bf0">X</span></div>
   </div>
   <div class="sidebar-footer">
     <div class="brand-pill" onclick="openSetup()">
@@ -995,6 +996,78 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100
 </div>
 
 
+
+<!-- X SCHEDULER -->
+<div class="page" id="page-scheduler">
+  <div class="ph">
+    <div class="ph-left"><div class="ph-title">X Scheduler</div><div class="ph-sub">KOLEJKA TWEETÓW · AUTO-PUBLIKOWANIE · @TESTOSTEREG</div></div>
+    <div class="ph-right">
+      <button class="btn btn-ghost btn-sm" onclick="testXConnection()" id="sch-test-btn">🔌 TEST POŁĄCZENIA</button>
+      <button class="btn btn-sm" onclick="runSchedulerNow()" id="sch-run-btn">▶ URUCHOM TERAZ</button>
+    </div>
+  </div>
+
+  <!-- Status bar -->
+  <div id="sch-status-bar" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="sch-dot" style="width:8px;height:8px;border-radius:50%;background:var(--muted)"></div>
+      <span id="sch-status-text" style="font-size:11px;color:var(--muted)">Sprawdzam połączenie...</span>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:16px">
+      <div style="text-align:center"><div class="stat-val" id="sch-pending-count" style="font-size:18px">—</div><div class="stat-lbl">W KOLEJCE</div></div>
+      <div style="text-align:center"><div class="stat-val" id="sch-published-count" style="font-size:18px;color:var(--cyan)">—</div><div class="stat-lbl">OPUBLIKOWANYCH</div></div>
+      <div style="text-align:center"><div class="stat-val" id="sch-failed-count" style="font-size:18px;color:var(--red)">—</div><div class="stat-lbl">BŁĘDY</div></div>
+    </div>
+  </div>
+
+  <div class="g2 mb16">
+    <!-- Dodaj do kolejki -->
+    <div class="card">
+      <div class="card-title">+ DODAJ DO KOLEJKI</div>
+      <div class="field">
+        <label class="label">TREŚĆ TWEETA</label>
+        <textarea class="textarea" id="sch-content" rows="4" placeholder="Wpisz treść tweeta..." oninput="updateCharCount()"></textarea>
+        <div style="text-align:right;font-size:10px;margin-top:4px" id="sch-char-count" style="color:var(--muted)">0 / 280</div>
+      </div>
+      <div class="field">
+        <label class="label">DATA I GODZINA PUBLIKACJI</label>
+        <input class="input" type="datetime-local" id="sch-datetime"/>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="addToQueue()" id="sch-add-btn">+ DODAJ DO KOLEJKI</button>
+        <button class="btn btn-ghost btn-sm" onclick="publishNowDirect()" id="sch-now-btn">⚡ OPUBLIKUJ TERAZ</button>
+      </div>
+    </div>
+
+    <!-- Wygeneruj z Script Agenta -->
+    <div class="card">
+      <div class="card-title">🤖 WYGENERUJ TWEET AI <span class="badge badge-lime">AGENT</span></div>
+      <div class="field"><label class="label">TEMAT</label><textarea class="textarea" id="sch-ai-topic" rows="2" placeholder="np. dlaczego większość twórców nigdy nie zarobi na contencie..."></textarea></div>
+      <div class="field"><label class="label">FORMAT</label>
+        <select class="select" id="sch-ai-format">
+          <option value="tweet">Pojedynczy tweet (max 280)</option>
+          <option value="hook">Tylko hook — pierwsze zdanie</option>
+        </select>
+      </div>
+      <div class="field"><label class="label">DATA PUBLIKACJI</label><input class="input" type="datetime-local" id="sch-ai-datetime"/></div>
+      <button class="btn" onclick="generateAndQueue()" id="sch-gen-btn" style="background:var(--purple);color:#fff">🤖 GENERUJ + DODAJ DO KOLEJKI</button>
+      <div class="ai-out mt12" id="sch-ai-preview" style="display:none;min-height:60px"></div>
+    </div>
+  </div>
+
+  <!-- Kolejka -->
+  <div class="card mb16">
+    <div class="card-title">📅 W KOLEJCE <span class="badge badge-outline" id="sch-queue-badge">0</span></div>
+    <div id="sch-queue-list"><div class="empty-state"><div class="empty-icon">📅</div>Brak zaplanowanych tweetów.</div></div>
+  </div>
+
+  <!-- Historia -->
+  <div class="card">
+    <div class="card-title">✓ OPUBLIKOWANE <span class="badge badge-outline" id="sch-history-badge">0</span></div>
+    <div id="sch-history-list"><div class="empty-state"><div class="empty-icon">✓</div>Brak opublikowanych postów.</div></div>
+  </div>
+</div>
+
 </main>
 </div>
 
@@ -1019,7 +1092,13 @@ window.onload = async () => {
 async function api(path, method='GET', body=null) {
   const opts = { method, headers: {'Content-Type':'application/json'} };
   if (body) opts.body = JSON.stringify(body);
-  const r = await fetch(`${API}/${path}`, opts);
+  // Dołącz brand_id do każdego requestu (poza brand i brands)
+  let fullPath = path;
+  if (activeBrandId && !path.startsWith('brand')) {
+    const sep = fullPath.includes('?') ? '&' : '?';
+    fullPath = fullPath + sep + 'brand_id=' + activeBrandId;
+  }
+  const r = await fetch(`${API}/${fullPath}`, opts);
   if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
   return r.json();
 }
@@ -1145,6 +1224,7 @@ function nav(el) {
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+el.dataset.page).classList.add('active');
   el.classList.add('active');
+  if (el.dataset.page === 'scheduler') { loadSchedulerStatus(); setDefaultScheduleTime(); }
 }
 function navTo(page) { const el = document.querySelector(`[data-page="${page}"]`); if(el) nav(el); }
 function openSetup() { document.getElementById('setup-overlay').style.display='flex'; }
@@ -2065,11 +2145,31 @@ let allBrands = [];
 
 async function initBrands() {
   try {
-    // Pobierz marke — pojedyncza marka, bez multi-brand
-    const brand = await api('brand').catch(() => null);
-    
+    // Sprobuj odtworzyc brand_id z localStorage
+    const savedId = localStorage.getItem('kult_active_brand');
+    if (savedId) activeBrandId = savedId;
+
+    // Pobierz marke z API
+    let brand = null;
+    try {
+      // Jesli mamy zapisane ID — pobierz konkretnie tę markę
+      const path = savedId ? 'brand?id=' + savedId : 'brand';
+      const r = await fetch(API + '/' + path, { method: 'GET', headers: {'Content-Type':'application/json'} });
+      if (r.ok) { brand = await r.json(); }
+    } catch(fetchErr) {
+      console.warn('initBrands fetch error:', fetchErr.message);
+    }
+
+    // Fallback: pobierz pierwszą markę z bazy bez filtra
+    if (!brand?.id) {
+      try {
+        const r2 = await fetch(API + '/brand', { method: 'GET', headers: {'Content-Type':'application/json'} });
+        if (r2.ok) brand = await r2.json();
+      } catch(_) {}
+    }
+
     if (!brand || !brand.id) {
-      // Brak marki — pierwszy raz, pokaż setup
+      // Naprawde brak marki w bazie — pokaż setup
       openSetup();
       return;
     }
@@ -2102,13 +2202,23 @@ async function initBrands() {
     await loadRecentScripts();
     loadKb(); loadXPosts(); loadCompetitors();
     loadDmTemplates(); loadChannels(); loadPostMetrics();
-    loadAgentSessions(); loadClients();
+    loadAgentSessions();
+  setDefaultScheduleTime(); loadClients();
     initCalendarV2();
     initRelations();
 
   } catch(e) {
     console.error('initBrands:', e);
-    openSetup();
+    // Blad sieci — nie pokazuj popup, pokaż błąd w statusie
+    const dbStatus = document.getElementById('db-status');
+    if (dbStatus) {
+      dbStatus.textContent = '⚠ Błąd połączenia z bazą: ' + e.message.substring(0, 60);
+      dbStatus.style.color = 'var(--red)';
+    }
+    // Pokaż popup tylko jeśli to błąd "not found" / brak marki, nie błąd sieci
+    if (!e.message.includes('fetch') && !e.message.includes('network') && !e.message.includes('Failed')) {
+      openSetup();
+    }
   }
 }
 
@@ -2909,6 +3019,216 @@ function doRate(btn, rating) {
   const contentId = row.dataset.id;
   const contentRef = row.dataset.ref;
   rateContent(contentType, contentId, contentRef, rating, btn);
+}
+
+
+// ══ X SCHEDULER ══
+const SCHEDULER = 'https://qxsytudsseskvweexznh.supabase.co/functions/v1/kult-scheduler';
+
+async function schedulerApi(path, method='GET', body=null) {
+  const opts = { method, headers: {'Content-Type':'application/json'} };
+  if (body) opts.body = JSON.stringify(body);
+  let fullPath = path;
+  if (activeBrandId) {
+    const sep = fullPath.includes('?') ? '&' : '?';
+    fullPath += sep + 'brand_id=' + activeBrandId;
+  }
+  const r = await fetch(SCHEDULER + '/' + fullPath, opts);
+  if (!r.ok) { const e = await r.json().catch(()=>({})); throw new Error(e.error || r.statusText); }
+  return r.json();
+}
+
+async function loadSchedulerStatus() {
+  try {
+    const d = await schedulerApi('status');
+    // Dot + status
+    const dot = document.getElementById('sch-dot');
+    const txt = document.getElementById('sch-status-text');
+    if (d.configured) {
+      dot.style.background = 'var(--lime)';
+      dot.style.boxShadow = '0 0 6px var(--lime)';
+      txt.textContent = 'Połączono z X API · Cron co 5 min · @testostereg';
+      txt.style.color = 'var(--lime)';
+    } else {
+      dot.style.background = 'var(--red)';
+      txt.textContent = 'Brak kluczy X API — dodaj do Supabase Vault';
+      txt.style.color = 'var(--red)';
+    }
+    // Counts
+    document.getElementById('sch-pending-count').textContent = (d.pending||[]).length;
+    document.getElementById('sch-published-count').textContent = (d.published||[]).length;
+    document.getElementById('sch-failed-count').textContent = (d.failed||[]).length;
+    document.getElementById('sch-queue-badge').textContent = (d.pending||[]).length;
+    document.getElementById('sch-history-badge').textContent = (d.published||[]).length;
+    // Render queue
+    renderQueue(d.pending||[]);
+    renderHistory(d.published||[], d.failed||[]);
+  } catch(e) { console.error('Scheduler status:', e); }
+}
+
+function renderQueue(posts) {
+  const el = document.getElementById('sch-queue-list');
+  if (!posts.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div>Brak zaplanowanych tweetów.</div>'; return; }
+  el.innerHTML = posts.map(p => {
+    const dt = new Date(p.scheduled_at);
+    const dtStr = dt.toLocaleDateString('pl-PL') + ' ' + dt.toLocaleTimeString('pl-PL', {hour:'2-digit',minute:'2-digit'});
+    const isOverdue = dt < new Date() && p.status === 'pending';
+    return '<div style="border:1px solid var(--border2);border-radius:6px;padding:13px;margin-bottom:8px;background:var(--s2)">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">' +
+        '<span style="font-family:var(--fh);font-size:10px;font-weight:700;color:' + (isOverdue?'var(--red)':'#1d9bf0') + '">' + (isOverdue?'⚠ PRZETERMINOWANY · ':'📅 ') + dtStr + '</span>' +
+        '<span style="margin-left:auto;display:flex;gap:6px">' +
+          '<button class="btn btn-sm" style="font-size:9px;padding:4px 10px;background:#1d9bf0" onclick="publishNow(this.dataset.id)" data-id="' + p.id + '">⚡ TERAZ</button>' +
+          '<button class="btn btn-ghost btn-sm" style="font-size:9px;padding:4px 10px;border-color:rgba(255,77,46,.4);color:var(--red)" onclick="deletePost(this.dataset.id)" data-id="' + p.id + '">✕</button>' +
+        '</span>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap">' + p.content + '</div>' +
+      '<div style="font-size:9px;color:var(--muted);margin-top:6px">' + p.content.length + ' / 280 znaków</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderHistory(published, failed) {
+  const el = document.getElementById('sch-history-list');
+  const all = [
+    ...failed.map(p => ({...p, _isFailed:true})),
+    ...published,
+  ];
+  if (!all.length) { el.innerHTML = '<div class="empty-state"><div class="empty-icon">✓</div>Brak historii.</div>'; return; }
+  el.innerHTML = all.map(p => {
+    const dt = new Date(p._isFailed ? p.updated_at : p.published_at);
+    const dtStr = dt.toLocaleDateString('pl-PL') + ' ' + dt.toLocaleTimeString('pl-PL', {hour:'2-digit',minute:'2-digit'});
+    const tweetUrl = p.tweet_id ? 'https://x.com/i/web/status/' + p.tweet_id : null;
+    return '<div style="border:1px solid ' + (p._isFailed?'rgba(255,77,46,.3)':'rgba(201,245,60,.2)') + ';border-radius:6px;padding:12px;margin-bottom:8px;background:var(--s2);opacity:' + (p._isFailed?'1':'0.85') + '">' +
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">' +
+        '<span style="font-size:10px;font-weight:700;font-family:var(--fh);color:' + (p._isFailed?'var(--red)':'var(--lime)') + '">' + (p._isFailed?'✗ BŁĄD':'✓ OPUBLIKOWANO') + ' · ' + dtStr + '</span>' +
+        (tweetUrl ? '<a href="' + tweetUrl + '" target="_blank" style="margin-left:auto;font-size:9px;color:#1d9bf0;text-decoration:none">OTWÓRZ NA X →</a>' : '') +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--' + (p._isFailed?'muted':'text') + ');line-height:1.6">' + p.content.substring(0,120) + (p.content.length>120?'…':'') + '</div>' +
+      (p._isFailed && p.error_message ? '<div style="font-size:10px;color:var(--red);margin-top:5px">Błąd: ' + p.error_message + '</div>' : '') +
+    '</div>';
+  }).join('');
+}
+
+function updateCharCount() {
+  const el = document.getElementById('sch-content');
+  const cnt = document.getElementById('sch-char-count');
+  if (!el || !cnt) return;
+  const len = el.value.length;
+  cnt.textContent = len + ' / 280';
+  cnt.style.color = len > 260 ? 'var(--red)' : len > 240 ? 'var(--gold)' : 'var(--muted)';
+}
+
+async function addToQueue() {
+  const content = document.getElementById('sch-content')?.value?.trim();
+  const dt = document.getElementById('sch-datetime')?.value;
+  if (!content) { notify('Wpisz treść tweeta!'); return; }
+  if (!dt) { notify('Wybierz datę i godzinę!'); return; }
+  if (content.length > 280) { notify('Tweet za długi! Max 280 znaków.'); return; }
+  const btn = document.getElementById('sch-add-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> DODAJĘ...';
+  try {
+    await schedulerApi('posts', 'POST', { content, scheduled_at: new Date(dt).toISOString() });
+    document.getElementById('sch-content').value = '';
+    updateCharCount();
+    await loadSchedulerStatus();
+    notify('✦ Dodano do kolejki!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '+ DODAJ DO KOLEJKI';
+}
+
+async function publishNowDirect() {
+  const content = document.getElementById('sch-content')?.value?.trim();
+  if (!content) { notify('Wpisz treść tweeta!'); return; }
+  if (content.length > 280) { notify('Tweet za długi!'); return; }
+  if (!confirm('Opublikować ten tweet natychmiast na @testostereg?')) return;
+  const btn = document.getElementById('sch-now-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    // Dodaj z czasem w przeszlosci i od razu uruchom scheduler
+    const pastTime = new Date(Date.now() - 60000).toISOString();
+    const post = await schedulerApi('posts', 'POST', { content, scheduled_at: pastTime, source: 'immediate' });
+    const result = await schedulerApi('posts/' + post.id + '/publish-now', 'POST');
+    document.getElementById('sch-content').value = '';
+    updateCharCount();
+    await loadSchedulerStatus();
+    if (result.tweet_id) {
+      notify('✦ Opublikowano! Tweet ID: ' + result.tweet_id);
+    }
+  } catch(e) { notify('Błąd publikacji: ' + e.message); }
+  btn.disabled = false; btn.textContent = '⚡ OPUBLIKUJ TERAZ';
+}
+
+async function generateAndQueue() {
+  const topic = document.getElementById('sch-ai-topic')?.value?.trim();
+  const dt = document.getElementById('sch-ai-datetime')?.value;
+  if (!topic) { notify('Wpisz temat!'); return; }
+  if (!dt) { notify('Wybierz datę i godzinę!'); return; }
+  const btn = document.getElementById('sch-gen-btn');
+  const preview = document.getElementById('sch-ai-preview');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> GENERUJĘ...';
+  preview.style.display = 'block'; preview.className = 'ai-out loading mt12';
+  preview.textContent = 'Agent generuje tweet...';
+  try {
+    const d = await syncApi('script-agent/generate', 'POST', {
+      topic, platform: 'X (Twitter)', format: 'Pojedynczy tweet', target_conversion: 'follow_profile'
+    });
+    const tweetText = (d.script || '').substring(0, 280);
+    preview.className = 'ai-out mt12';
+    preview.textContent = tweetText;
+    // Dodaj do kolejki
+    await schedulerApi('posts', 'POST', { content: tweetText, scheduled_at: new Date(dt).toISOString(), source: 'ai_agent' });
+    await loadSchedulerStatus();
+    notify('✦ Tweet wygenerowany i dodany do kolejki!');
+  } catch(e) { preview.className = 'ai-out mt12'; preview.textContent = 'Błąd: ' + e.message; }
+  btn.disabled = false; btn.textContent = '🤖 GENERUJ + DODAJ DO KOLEJKI';
+}
+
+async function publishNow(postId) {
+  if (!confirm('Opublikować ten tweet teraz na @testostereg?')) return;
+  try {
+    const result = await schedulerApi('posts/' + postId + '/publish-now', 'POST');
+    await loadSchedulerStatus();
+    notify(result.tweet_id ? '✦ Opublikowano! ID: ' + result.tweet_id : 'Opublikowano!');
+  } catch(e) { notify('Błąd: ' + e.message); }
+}
+
+async function deletePost(postId) {
+  if (!confirm('Usunąć ten post z kolejki?')) return;
+  await schedulerApi('posts/' + postId, 'DELETE');
+  await loadSchedulerStatus();
+  notify('Post usunięty z kolejki.');
+}
+
+async function testXConnection() {
+  const btn = document.getElementById('sch-test-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> TESTUJĘ...';
+  try {
+    const d = await schedulerApi('test', 'POST');
+    notify(d.configured ? '✦ ' + d.message : '✗ ' + d.message);
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '🔌 TEST POŁĄCZENIA';
+}
+
+async function runSchedulerNow() {
+  const btn = document.getElementById('sch-run-btn');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> URUCHAMIAM...';
+  try {
+    const d = await schedulerApi('run', 'POST');
+    await loadSchedulerStatus();
+    notify('Scheduler: ' + d.published + ' opublikowanych, ' + d.failed + ' błędów.');
+  } catch(e) { notify('Błąd: ' + e.message); }
+  btn.disabled = false; btn.textContent = '▶ URUCHOM TERAZ';
+}
+
+// Ustaw domyslny czas na za godzine
+function setDefaultScheduleTime() {
+  const now = new Date();
+  now.setHours(now.getHours() + 1, 0, 0, 0);
+  const fmt = now.toISOString().slice(0,16);
+  const el1 = document.getElementById('sch-datetime');
+  const el2 = document.getElementById('sch-ai-datetime');
+  if (el1) el1.value = fmt;
+  if (el2) el2.value = fmt;
 }
 
 </script>
